@@ -1,8 +1,5 @@
 package com.coderman.video.handler;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.coderman.video.mapper.UserMapper;
 import com.coderman.video.model.User;
 import com.coderman.video.service.UserService;
 import com.coderman.video.utils.SecurityUtils;
@@ -38,7 +35,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
         user.setLastLoginAt(new Date());
         this.userService.updateById(user);
 
-        response.sendRedirect("/index");
+        response.sendRedirect("/");
     }
 }
 

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>视频列表</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <style>
+        .video-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s;
+        }
+
+        .video-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .video-thumb {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .video-info {
+            padding: 0.5rem 1rem;
+        }
+
+        .video-title {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .category-select {
+            max-width: 240px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="p-3">
+
+<div class="container">
+    <h4>视频列表</h4>
+
+    <!-- 分类筛选 -->
+    <div class="form-group category-select">
+        <label for="category">视频分类：</label>
+        <select id="category" class="form-control" onchange="onCategoryChange()">
+            <option value="">全部</option>
+            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                    th:selected="${c.id == selectedCategory}"></option>
+        </select>
+    </div>
+
+    <!-- 视频列表 -->
+    <div class="row">
+        <div class="col-md-4" th:each="video : ${videos}">
+            <div class="video-card">
+                <img th:src="${video.coverUrl}" alt="封面" class="video-thumb">
+                <div class="video-info">
+                    <div class="video-title" th:text="${video.title}">视频标题</div>
+                    <div>时长：<span th:text="${video.duration}">00:00</span></div>
+                    <div>上传人：<span th:text="${video.uploader}">张三</span></div>
+                    <button class="btn btn-sm btn-primary mt-2" th:onclick="'playVideo(' + ${video.id} + ')'">
+                        播放
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页 -->
+    <nav th:if="${page.totalPages > 1}">
+        <ul class="pagination mt-3">
+            <li class="page-item" th:classappend="${page.number == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/video/list(page=${page.number - 1}, category=${selectedCategory})}">上一页</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+                th:classappend="${i == page.number} ? 'active'">
+                <a class="page-link" th:href="@{/video/list(page=${i}, category=${selectedCategory})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${page.number + 1 == page.totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/video/list(page=${page.number + 1}, category=${selectedCategory})}">下一页</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- 简单播放弹窗 -->
+<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">视频播放</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <video id="player" controls style="width: 100%; height: auto;">
+                    <source id="playerSource" src="" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+<script>
+    function playVideo(id) {
+        // 假设你有接口 /video/play/{id} 返回视频播放地址
+        fetch(`/video/play/${id}`)
+            .then(resp => resp.text())
+            .then(url => {
+                document.getElementById('playerSource').src = url;
+                const player = document.getElementById('player');
+                player.load();
+                const modal = new bootstrap.Modal(document.getElementById('videoModal'));
+                modal.show();
+            });
+    }
+
+    function onCategoryChange() {
+        const selectedId = document.getElementById("category").value;
+        window.location.href = `/video/list?category=${selectedId}`;
+    }
+</script>
+
+</body>
+</html>
