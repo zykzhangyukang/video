@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>主页</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            background: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h2 {
+            margin: 0;
+            font-weight: normal;
+            font-size: 1.25rem;
+        }
+        header h2 img {
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-left: 0.5rem;
+        }
+        nav {
+            background: #fff;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            user-select: none;
+        }
+        nav button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        nav button:hover {
+            background: #0056b3;
+        }
+        main {
+            flex-grow: 1;
+            background: white;
+            border-top: 1px solid #ddd;
+            overflow: hidden;
+        }
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+        a.logout {
+            color: white;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>
+        欢迎回来，
+        <span sec:authorize="isAuthenticated()" th:text="${#authentication.name}">用户</span>
+        <span th:text="${#authentication.principal.nickname}">昵称</span>
+        <img th:src="${#authentication.principal.avatarUrl}" alt="头像" />
+    </h2>
+    <a th:href="@{/logout}" class="logout">退出登录</a>
+</header>
+
+<nav>
+    <button data-src="/list">视频列表</button>
+    <button data-src="/upload">上传视频</button>
+    <button data-src="/profile">个人中心</button>
+</nav>
+
+<main>
+    <iframe id="contentFrame" src="/list"></iframe>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(function() {
+        $('nav button').click(function() {
+            const src = $(this).data('src');
+            $('#contentFrame').attr('src', src);
+        });
+    });
+</script>
+
+</body>
+</html>
