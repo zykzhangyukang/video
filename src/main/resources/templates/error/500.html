@@ -4,37 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>500 - 服务器内部错误</title>
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/all.min.css}">
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            background-color: #f8f9fa;
-        }
-        .full-height {
-            height: 100vh;
-        }
-        .error-code {
-            font-size: 6rem;
-            font-weight: 700;
-            /*color: #dc3545;*/
-            line-height: 1;
-        }
-        .error-message {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
-            color: #6c757d;
-        }
-    </style>
 </head>
 <body>
-<div class="container d-flex flex-column justify-content-center align-items-center text-center full-height">
-    <div class="error-code">500</div>
-    <div class="error-message">服务器发生了一些错误，请稍后再试。</div>
-    <a class="btn btn-primary btn-lg"
-       th:href="@{/}"
-       onclick="window.top.location.href=this.href; return false;">
+
+<div>
+    <h1>500</h1>
+    <p>服务器发生了一些错误，请稍后再试。</p>
+    <a th:href="@{/}" onclick="window.top.location.href=this.href; return false;">
         返回首页
     </a>
 </div>
