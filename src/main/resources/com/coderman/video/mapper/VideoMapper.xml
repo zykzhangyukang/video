@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coderman.video.mapper.VideoMapper">
+  <resultMap id="BaseResultMap" type="com.coderman.video.model.Video">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="category_id" jdbcType="BIGINT" property="categoryId" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="cover_url" jdbcType="VARCHAR" property="coverUrl" />
+    <result column="video_url" jdbcType="VARCHAR" property="videoUrl" />
+    <result column="duration" jdbcType="INTEGER" property="duration" />
+    <result column="is_published" jdbcType="TINYINT" property="isPublished" />
+    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
+    <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.coderman.video.model.Video">
+    <result column="description" jdbcType="LONGVARCHAR" property="description" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, category_id, title, cover_url, video_url, duration, is_published, created_at,
+    updated_at
+  </sql>
+  <sql id="Blob_Column_List">
+    description
+  </sql>
+
+  <sql id="pageWhere">
+    <where>
+      <if test="categoryId != null and categoryId > 0">
+        AND category_id = #{categoryId}
+      </if>
+      <if test="keyword != null and keyword != ''">
+        AND title LIKE CONCAT('%', #{title}, '%')
+      </if>
+      AND is_published = 1
+    </where>
+  </sql>
+
+  <!-- 查询分页数据 -->
+  <select id="selectVideoPage" resultType="com.coderman.video.vo.VideoVO">
+    SELECT
+    id,
+    category_id,
+    title,
+    description,
+    cover_url as cover
+    FROM
+    video
+    <include refid="pageWhere"/>
+    ORDER BY created_at DESC
+    LIMIT #{size} OFFSET #{offset}
+  </select>
+
+  <!-- 查询总数量 -->
+  <select id="countVideoPage" resultType="long">
+    SELECT COUNT(1)
+    FROM video
+    <include refid="pageWhere"/>
+  </select>
+
+
+</mapper>

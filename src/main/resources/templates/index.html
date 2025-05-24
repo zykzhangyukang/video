@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
     <script th:src="@{/libs/vue.js}"></script>
     <script th:src="@{/libs/element-ui.min.js}"></script>
+    <script th:src="@{/libs/axios.min.js}"></script>
     <style>
         :root {
             --primary-color: #409EFF;
@@ -422,8 +423,8 @@
                 <div
                         v-for="tab in tabs"
                         :key="tab.name"
-                        :class="['tab-item', { active: activeTab === tab.name }]"
-                        @click="switchTab(tab.name)"
+                        :class="['tab-item', { active: activeTab === tab.id }]"
+                        @click="switchTab(tab.id)"
                 >
                     {{ tab.label }}
                 </div>
@@ -498,13 +499,13 @@
     </div>
 </div>
 <script th:inline="javascript">
-    let tabs = [[${videoCategories}]];
+    let tabs = [[${categories}]];
 </script>
 <script>
     new Vue({
         el: '#app',
         data: {
-            activeTab: 'all',
+            activeTab: 0,
             tabs: tabs,
             videos: [],
             loading: false,
@@ -516,9 +517,9 @@
             showSearch: false   // 控制搜索框显示
         },
         methods: {
-            switchTab(name) {
-                if (this.activeTab === name) return;
-                this.activeTab = name;
+            switchTab(id) {
+                if (this.activeTab === id) return;
+                this.activeTab = id;
                 this.currentPage = 1;
                 this.loadVideos();
             },
@@ -550,47 +551,31 @@
                 this.videos = [];
                 this.loadedImages = {};
 
-                // 模拟API请求延迟
-                setTimeout(() => {
-                    const allVideos = Array.from({ length: 50 }).map((_, i) => {
-                        const types = ['all', 'frontend', 'backend', 'ai'];
-                        const categories = {
-                            'frontend': ['Vue.js', 'React', 'TypeScript', 'Webpack'],
-                            'backend': ['Spring Boot', 'Django', 'Node.js', 'MySQL'],
-                            'ai': ['机器学习', '深度学习', '计算机视觉', 'NLP']
-                        };
+                const params = {
+                    categoryId: this.activeTab,
+                    keyword: this.searchKeyword,
+                    page: this.currentPage,
+                    size: this.pageSize
+                };
 
-                        const type = types[i % types.length];
-                        const category = type !== 'all' ? categories[type][i % categories[type].length] : '综合';
-
-                        return {
-                            id: i + 1,
-                            title: `${category}教程 - 视频标题 ${i + 1}`,
-                            description: `这是关于${category}的视频教程第${i + 1}期，包含详细讲解和实战演示。`,
-                            cover: `https://picsum.photos/300/169?random=${i + 1}&blur=${i % 3}`,
-                            type: type
-                        };
+                // 发送POST请求获取视频列表
+                axios.post('/api/getVideoPage', params)
+                    .then(response => {
+                        if (response.data && response.data.code === 200) {
+                            const data = response.data.result;
+                            this.videos = data.list || [];
+                            this.totalVideos = data.total || 0;
+                        } else {
+                            this.$message.error(response.data.message || '获取视频列表失败');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取视频列表出错:', error);
+                        this.$message.error('获取视频列表出错');
+                    })
+                    .finally(() => {
+                        this.loading = false;
                     });
-
-                    let filtered = allVideos;
-                    if (this.activeTab !== 'all') {
-                        filtered = filtered.filter(v => v.type === this.activeTab);
-                    }
-                    if (this.searchKeyword.trim() !== '') {
-                        const kw = this.searchKeyword.trim().toLowerCase();
-                        filtered = filtered.filter(v =>
-                            v.title.toLowerCase().includes(kw) ||
-                            v.description.toLowerCase().includes(kw)
-                        );
-                    }
-
-                    this.totalVideos = filtered.length;
-                    const start = (this.currentPage - 1) * this.pageSize;
-                    const end = start + this.pageSize;
-                    this.videos = filtered.slice(start, end);
-
-                    this.loading = false;
-                }, 800);
             },
             onImageLoad(id) {
                 this.$set(this.loadedImages, id, true);

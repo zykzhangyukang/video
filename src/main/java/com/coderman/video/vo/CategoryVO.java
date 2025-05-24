@@ -7,7 +7,10 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class VideoCategoryVO extends BaseModel {
+public class CategoryVO extends BaseModel {
+
+    @ApiModelProperty(value = "分类id")
+    private Long id;
 
     @ApiModelProperty(value = "分类名")
     private String name;
