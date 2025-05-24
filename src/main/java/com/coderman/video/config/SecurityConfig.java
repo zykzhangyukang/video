@@ -63,7 +63,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf().disable() // 禁用 CSRF（表单项目可开启，前后端分离建议关闭）
                 .authorizeRequests()
-                .antMatchers("/login", "/login.html", "/css/**", "/js/**","/code/image").permitAll() // 放行请求
+                .antMatchers("/login", "/libs/**", "/css/**", "/js/**","/code/image").permitAll() // 放行请求
                 .anyRequest().authenticated() // 其他都要认证
                 .and()
                 .formLogin()

@@ -1,62 +1,217 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>登录</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script>
-        function refreshCaptcha() {
-            let img = document.getElementById('captchaImg');
-            img.src = img.getAttribute('data-src') + '?t=' + new Date().getTime();
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
+    <script th:src="@{/libs/vue.js}"></script>
+    <script th:src="@{/libs/element-ui.min.js}"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
         }
-    </script>
+
+        #app {
+            background: #fff;
+            padding: 24px 28px;
+            border-radius: 5px;
+            box-shadow: none;
+            width: 100%;
+            max-width: 360px;
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #e0e6ed; /* 轻微边框勾勒形状 */
+        }
+
+        .login-header h3 {
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        .el-form-item {
+            margin-bottom: 16px;
+        }
+
+        .captcha-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .captcha-img {
+            height: 34px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #dcdfe6;
+        }
+
+        .el-input__inner {
+            height: 36px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+
+        .el-button {
+            width: 100%;
+            height: 36px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+
+        .submit-btn {
+            margin-top: 8px;
+        }
+
+        .footer-links {
+            margin-top: 12px;
+            font-size: 12px;
+            text-align: center;
+            color: #999;
+        }
+
+        .footer-links a {
+            margin: 0 4px;
+            color: #409EFF;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
+<div id="app" v-cloak>
+    <div class="login-header">
+        <h3>欢迎登录</h3>
+    </div>
+    <el-form
+            :model="form"
+            ref="loginForm"
+            action="/doLogin"
+            method="post"
+            @submit.native.prevent="handleSubmit"
+    >
+        <el-form-item prop="username" :rules="[{ required: true, message: '请输入用户名', trigger: 'blur' }]">
+            <el-input
+                    v-model="form.username"
+                    name="username"
+                    placeholder="用户名"
+                    prefix-icon="el-icon-user"
+                    autocomplete="username"
+            ></el-input>
+        </el-form-item>
 
-<h3>用户登录</h3>
-<form th:action="@{/doLogin}" method="post">
-    <table>
-        <tr>
-            <td><label for="username">用户名</label></td>
-            <td><input type="text" id="username" name="username" value="admin" required></td>
-        </tr>
-        <tr>
-            <td><label for="password">密码</label></td>
-            <td><input type="password" id="password" name="password" value="123456" required></td>
-        </tr>
-        <tr>
-            <td><label for="captcha">验证码</label></td>
-            <td>
-                <input type="text" id="captcha" name="captcha" placeholder="请输入验证码" required>
+        <el-form-item prop="password" :rules="[{ required: true, message: '请输入密码', trigger: 'blur' }]">
+            <el-input
+                    v-model="form.password"
+                    type="password"
+                    name="password"
+                    placeholder="密码"
+                    prefix-icon="el-icon-lock"
+                    show-password
+                    autocomplete="current-password"
+            ></el-input>
+        </el-form-item>
+
+        <el-form-item prop="captcha" :rules="[{ required: true, message: '请输入验证码', trigger: 'blur' }]">
+            <div class="captcha-container">
+                <el-input
+                        v-model="form.captcha"
+                        name="captcha"
+                        placeholder="验证码"
+                ></el-input>
                 <img
-                        th:src="@{/code/image}"
-                        data-src="/code/image"
+                        :src="captchaSrc"
                         alt="验证码"
-                        id="captchaImg"
+                        class="captcha-img"
                         title="点击刷新验证码"
-                        onclick="refreshCaptcha()"
-                        style="cursor: pointer; vertical-align: middle;"
-                >
-            </td>
-        </tr>
-        <tr>
-            <td><label for="rememberMe">记住我</label></td>
-            <td>
-                <input type="checkbox" id="rememberMe" name="remember-me">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <button type="submit">登录</button>
-            </td>
-        </tr>
-    </table>
-</form>
+                        @click="refreshCaptcha"
+                />
+            </div>
+        </el-form-item>
 
-<!-- 错误提示 -->
-<div th:if="${param.error}">
-    <p th:text="${param.error}"></p>
+        <el-form-item>
+            <el-checkbox v-model="form.rememberMe" name="remember-me">记住我</el-checkbox>
+        </el-form-item>
+
+        <el-form-item class="submit-btn">
+            <el-button
+                    type="primary"
+                    native-type="submit"
+                    :loading="loading"
+            >
+                登录
+            </el-button>
+        </el-form-item>
+
+        <el-alert
+                th:if="${param.error}"
+                th:title="${param.error}"
+                type="error"
+                show-icon
+                class="error-message"
+                :closable="true"
+        ></el-alert>
+    </el-form>
+
+    <div class="footer-links">
+        <a href="#">忘记密码</a>
+        <span>|</span>
+        <a href="#">注册账号</a>
+    </div>
 </div>
 
+<script>
+    Vue.use(ELEMENT);
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                form: {
+                    username: "admin",
+                    password: "123456",
+                    captcha: "",
+                    rememberMe: false,
+                },
+                captchaSrc: "/code/image?t=" + new Date().getTime(),
+                loading: false,
+            };
+        },
+        methods: {
+            refreshCaptcha() {
+                this.captchaSrc = "/code/image?t=" + new Date().getTime();
+            },
+            handleSubmit() {
+                this.$refs.loginForm.validate(valid => {
+                    if (!valid) return;
+                    this.loading = true;
+                    this.$refs.loginForm.$el.submit();
+                });
+            }
+        },
+        mounted() {
+            this.refreshCaptcha();
+        },
+    });
+</script>
 </body>
 </html>
