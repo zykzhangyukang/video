@@ -4,148 +4,338 @@
       lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>视频首页</title>
     <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
     <script th:src="@{/libs/vue.js}"></script>
     <script th:src="@{/libs/element-ui.min.js}"></script>
     <style>
+        :root {
+            --primary-color: #409EFF;
+            --primary-hover: #66b1ff;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #e4e7ed;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            background-color: #f5f7fa;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
         }
+
         #app {
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+
+        /* 导航栏优化 */
         .navbar {
             background: #1f2d3d;
             color: white;
-            padding: 12px 24px;
+            padding: 0.75rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
             position: sticky;
             top: 0;
             z-index: 1000;
         }
+
         .navbar .logo {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
+
         .navbar .user-info {
             display: flex;
             align-items: center;
+            gap: 0.75rem;
         }
+
         .navbar .user-info img {
-            width: 25px;
-            height: 25px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 8px;
+            border: 2px solid rgba(255,255,255,0.2);
         }
+
         .navbar .user-info .nickname {
-            margin-right: 12px;
             font-weight: 500;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+
         .navbar a {
-            color: #fff;
+            color: rgba(255,255,255,0.9);
             text-decoration: none;
-            margin-left: 10px;
-            transition: color 0.3s;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
         }
+
         .navbar a:hover {
             color: #ffd04b;
+            background: rgba(255,255,255,0.1);
         }
+
+        /* 主体内容优化 */
         .main-container {
+            flex: 1;
             max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
-            padding: 30px 20px 60px; /* 给分页留点底部空间 */
+            padding: 1.5rem 1rem 3rem;
+            box-sizing: border-box;
         }
-        .video-info {
-            padding-top: 10px;
+
+        /* 标签页和搜索容器 */
+        .tabs-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            position: relative;
         }
-        .video-card {
-            margin-bottom: 24px;
-        }
-        /* 自定义 Tabs 样式 */
+
+        /* 标签页优化 */
         .custom-tabs {
             display: flex;
-            gap: 20px;
-            border-bottom: 2px solid #eee;
-            margin-bottom: 20px;
-            padding: 0 10px;
-            background: #fff;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+            flex: 1;
+            margin-right: 1rem;
         }
+
+        .custom-tabs::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
         .tab-item {
-            padding: 10px 4px;
+            padding: 0.75rem 0.5rem;
             cursor: pointer;
             font-weight: 500;
-            color: #555;
+            color: var(--text-regular);
             position: relative;
-            transition: color 0.3s;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-size: 0.95rem;
         }
+
         .tab-item::after {
             content: '';
             display: block;
             height: 2px;
             background: transparent;
             position: absolute;
-            bottom: -2px;
+            bottom: -1px;
             left: 0;
             right: 0;
-            transition: background 0.3s;
-        }
-        .tab-item:hover {
-            color: #409eff;
-        }
-        .tab-item.active {
-            color: #409eff;
-        }
-        .tab-item.active::after {
-            background: #409eff;
-        }
-        /* fade 动画 */
-        .fade-enter-active, .fade-leave-active {
-            transition: opacity 0.4s ease;
-        }
-        .fade-enter, .fade-leave-to {
-            opacity: 0;
-        }
-        /* 搜索框容器 */
-        .search-container {
-            max-width: 400px;
-            margin: 0 auto 30px;
-            display: flex;
-        }
-        .search-container input {
-            flex: 1;
+            transition: var(--transition);
         }
 
-        /* 图片容器固定大小 + 占位背景 */
-        .image-wrapper {
+        .tab-item:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-item.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .tab-item.active::after {
+            background: var(--primary-color);
+        }
+
+        /* 搜索图标 */
+        .search-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-regular);
+            font-size: 1.1rem;
+        }
+
+        .search-icon:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--primary-color);
+        }
+
+        /* 搜索框优化 - 改为相对定位 */
+        .search-wrapper {
             position: relative;
             width: 100%;
-            height: 150px;
-            border-radius: 6px;
-            background-color: #e0e0e0; /* 占位灰 */
+            margin-bottom: 1.5rem;
+            height: 0;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .search-wrapper.expanded {
+            height: 60px; /* 调整为搜索框高度 */
+            margin-bottom: 1.5rem;
+        }
+
+        .search-container {
+            max-width: 600px;
+            width: 100%;
+            margin-left: auto;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        /* 视频卡片优化 */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .video-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .video-card .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 比例 */
+            background-color: #f0f2f5;
             overflow: hidden;
         }
-        .image-wrapper img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            display: block;
-            transition: opacity 0.3s ease;
-        }
-        .image-wrapper .placeholder {
+
+        .video-card .image-wrapper img {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease;
+        }
+
+        .video-card .image-wrapper .placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, #f0f2f5 25%, #e6e8eb 50%, #f0f2f5 75%);
             background-size: 200% 100%;
             animation: loadingShimmer 1.5s infinite;
         }
+
+        .video-card .video-info {
+            padding: 0.75rem;
+        }
+
+        .video-card .video-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        .video-card .video-desc {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 骨架屏优化 */
+        .skeleton-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .skeleton-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .skeleton-image {
+            width: 100%;
+            padding-top: 56.25%;
+            background: linear-gradient(90deg, #f0f2f5 25%, #e6e8eb 50%, #f0f2f5 75%);
+            background-size: 200% 100%;
+            animation: loadingShimmer 1.5s infinite;
+        }
+
+        .skeleton-content {
+            padding: 0.75rem;
+        }
+
+        .skeleton-line {
+            height: 16px;
+            background: #f0f2f5;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .skeleton-line:last-child {
+            width: 60%;
+        }
+
+        /* 分页优化 */
+        .pagination-container {
+            margin-top: 2.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 动画 */
         @keyframes loadingShimmer {
             0% {
                 background-position: 200% 0;
@@ -154,18 +344,53 @@
                 background-position: -200% 0;
             }
         }
-        /* 响应式微调 */
+
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+
+        .fade-enter, .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* 响应式调整 */
         @media (max-width: 768px) {
             .main-container {
-                padding: 20px 10px 60px;
+                padding: 1rem 0.75rem 2.5rem;
             }
+
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .navbar .logo {
+                font-size: 1.1rem;
+            }
+
             .custom-tabs {
-                gap: 12px;
-                padding: 0 5px;
+                gap: 0.75rem;
             }
+
+            .tab-item {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.9rem;
+            }
+
+            .video-grid,
+            .skeleton-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 1rem;
+            }
+
             .search-container {
-                max-width: 100%;
-                margin-bottom: 20px;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .video-grid,
+            .skeleton-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -184,61 +409,63 @@
         </div>
 
         <div sec:authorize="!isAuthenticated()">
-            <a th:href="@{/login}">登录</a> /
+            <a th:href="@{/login}">登录</a>
             <a th:href="@{/register}">注册</a>
         </div>
     </div>
 
     <!-- 主体内容 -->
     <div class="main-container">
-        <div class="custom-tabs">
-            <div
-                    v-for="tab in tabs"
-                    :key="tab.name"
-                    :class="['tab-item', { active: activeTab === tab.name }]"
-                    @click="switchTab(tab.name)"
-            >
-                {{ tab.label }}
+        <div class="tabs-container">
+            <div class="custom-tabs">
+                <div
+                        v-for="tab in tabs"
+                        :key="tab.name"
+                        :class="['tab-item', { active: activeTab === tab.name }]"
+                        @click="switchTab(tab.name)"
+                >
+                    {{ tab.label }}
+                </div>
+            </div>
+
+            <!-- 搜索图标 -->
+            <div class="search-icon" @click="toggleSearch">
+                <i class="el-icon-search"></i>
             </div>
         </div>
 
-        <!-- 搜索框 -->
-        <div class="search-container">
-            <el-input
-                    placeholder="搜索视频关键词"
-                    v-model="searchKeyword"
-                    clearable
-                    @clear="onSearchClear"
-                    @keyup.enter.native="onSearch"
-            >
-                <template slot="append">
-                    <el-button @click="onSearch" type="primary">搜索</el-button>
-                </template>
-            </el-input>
+        <!-- 搜索框容器 -->
+        <div :class="['search-wrapper', { expanded: showSearch }]">
+            <div class="search-container">
+                <el-input
+                        placeholder="搜索视频关键词"
+                        v-model="searchKeyword"
+                        clearable
+                        @clear="onSearchClear"
+                        @keyup.enter.native="onSearch"
+                        ref="searchInput"
+                >
+                    <template slot="append">
+                        <el-button @click="onSearch" type="primary" icon="el-icon-search"></el-button>
+                    </template>
+                </el-input>
+            </div>
         </div>
 
         <!-- 视频列表或骨架屏 -->
-        <div v-if="loading">
-            <el-row :gutter="20" style="margin-top: 20px;">
-                <el-col v-for="n in pageSize" :key="n" :xs="24" :sm="12" :md="8" :lg="6" class="video-card">
-                    <el-card shadow="hover" :body-style="{ padding: '10px' }">
-                        <el-skeleton :loading="true" animated>
-                            <template #template>
-                                <el-skeleton-item variant="image" style="width: 100%; height: 150px; border-radius: 6px;"></el-skeleton-item>
-                                <div style="padding-top: 10px;">
-                                    <el-skeleton-item variant="text" style="width: 80%; height: 20px; margin-bottom: 6px;"></el-skeleton-item>
-                                    <el-skeleton-item variant="text" style="width: 60%; height: 14px;"></el-skeleton-item>
-                                </div>
-                            </template>
-                        </el-skeleton>
-                    </el-card>
-                </el-col>
-            </el-row>
-        </div>
+        <transition name="fade" mode="out-in">
+            <div v-if="loading" class="skeleton-grid">
+                <div v-for="n in pageSize" :key="n" class="skeleton-card">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                    </div>
+                </div>
+            </div>
 
-        <el-row v-else :gutter="20" style="margin-top: 20px;">
-            <el-col v-for="video in videos" :key="video.id" :xs="24" :sm="12" :md="8" :lg="6" class="video-card">
-                <el-card shadow="hover" :body-style="{ padding: '10px' }">
+            <div v-else class="video-grid">
+                <div v-for="video in videos" :key="video.id" class="video-card">
                     <div class="image-wrapper">
                         <div v-if="!loadedImages[video.id]" class="placeholder"></div>
                         <img
@@ -249,15 +476,15 @@
                         />
                     </div>
                     <div class="video-info">
-                        <div style="font-weight: bold;">{{ video.title }}</div>
-                        <div style="color: #888; font-size: 12px;">{{ video.description }}</div>
+                        <div class="video-title">{{ video.title }}</div>
+                        <div class="video-desc">{{ video.description }}</div>
                     </div>
-                </el-card>
-            </el-col>
-        </el-row>
+                </div>
+            </div>
+        </transition>
 
         <!-- 分页组件 -->
-        <div style="text-align: center; margin-top: 20px;">
+        <div v-if="totalVideos > pageSize" class="pagination-container">
             <el-pagination
                     background
                     @current-change="handlePageChange"
@@ -287,7 +514,8 @@
             currentPage: 1,
             pageSize: 8,
             totalVideos: 0,
-            loadedImages: {}  // 记录图片加载状态
+            loadedImages: {},  // 记录图片加载状态
+            showSearch: false   // 控制搜索框显示
         },
         methods: {
             switchTab(name) {
@@ -296,9 +524,19 @@
                 this.currentPage = 1;
                 this.loadVideos();
             },
+            toggleSearch() {
+                this.showSearch = !this.showSearch;
+                if (this.showSearch) {
+                    this.$nextTick(() => {
+                        this.$refs.searchInput.focus();
+                    });
+                }
+            },
             onSearch() {
+                if (this.searchKeyword.trim() === '') return;
                 this.currentPage = 1;
                 this.loadVideos();
+                this.showSearch = false; // 搜索后隐藏搜索框
             },
             onSearchClear() {
                 this.searchKeyword = '';
@@ -314,15 +552,25 @@
                 this.videos = [];
                 this.loadedImages = {};
 
+                // 模拟API请求延迟
                 setTimeout(() => {
                     const allVideos = Array.from({ length: 50 }).map((_, i) => {
                         const types = ['all', 'frontend', 'backend', 'ai'];
+                        const categories = {
+                            'frontend': ['Vue.js', 'React', 'TypeScript', 'Webpack'],
+                            'backend': ['Spring Boot', 'Django', 'Node.js', 'MySQL'],
+                            'ai': ['机器学习', '深度学习', '计算机视觉', 'NLP']
+                        };
+
+                        const type = types[i % types.length];
+                        const category = type !== 'all' ? categories[type][i % categories[type].length] : '综合';
+
                         return {
                             id: i + 1,
-                            title: `视频标题 ${i + 1}`,
-                            description: `这是视频${i + 1}的简介。`,
-                            cover: 'https://picsum.photos/300/150?random=' + (i + 1),
-                            type: types[i % types.length]
+                            title: `${category}教程 - 视频标题 ${i + 1}`,
+                            description: `这是关于${category}的视频教程第${i + 1}期，包含详细讲解和实战演示。`,
+                            cover: `https://picsum.photos/300/169?random=${i + 1}&blur=${i % 3}`,
+                            type: type
                         };
                     });
 
@@ -332,7 +580,10 @@
                     }
                     if (this.searchKeyword.trim() !== '') {
                         const kw = this.searchKeyword.trim().toLowerCase();
-                        filtered = filtered.filter(v => v.title.toLowerCase().includes(kw) || v.description.toLowerCase().includes(kw));
+                        filtered = filtered.filter(v =>
+                            v.title.toLowerCase().includes(kw) ||
+                            v.description.toLowerCase().includes(kw)
+                        );
                     }
 
                     this.totalVideos = filtered.length;
