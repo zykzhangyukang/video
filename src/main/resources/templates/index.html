@@ -28,7 +28,9 @@
             --radius-lg: 12px;
             --transition: all 0.3s ease;
         }
-
+        [v-cloak] {
+            display: none;
+        }
         html, body {
             margin: 0;
             padding: 0;
@@ -127,13 +129,13 @@
             gap: 1rem;
             padding: 0 0.5rem;
             overflow-x: auto;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
             flex: 1;
             margin-right: 1rem;
         }
 
         .custom-tabs::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none;
         }
 
         .tab-item {
@@ -191,7 +193,7 @@
             color: var(--primary-color);
         }
 
-        /* 搜索框优化 - 改为相对定位 */
+        /* 搜索框优化 */
         .search-wrapper {
             position: relative;
             width: 100%;
@@ -202,7 +204,7 @@
         }
 
         .search-wrapper.expanded {
-            height: 60px; /* 调整为搜索框高度 */
+            height: 60px;
             margin-bottom: 1.5rem;
         }
 
@@ -236,13 +238,14 @@
 
         .video-card:hover {
             transform: translateY(-4px);
+            cursor: pointer;
             box-shadow: var(--shadow-lg);
         }
 
         .video-card .image-wrapper {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 比例 */
+            padding-top: 56.25%;
             background-color: #f0f2f5;
             overflow: hidden;
         }
@@ -268,8 +271,25 @@
             animation: loadingShimmer 1.5s infinite;
         }
 
+        .video-card .image-wrapper .error-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f2f5;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 0.5rem;
+        }
+
         .video-card .video-info {
             padding: 0.75rem;
+            min-height: 80px;
         }
 
         .video-card .video-title {
@@ -277,10 +297,13 @@
             font-size: 0.95rem;
             margin-bottom: 0.25rem;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            text-overflow: ellipsis;
             color: var(--text-primary);
+            line-height: 1.3;
+            max-height: 1.3em;
         }
 
         .video-card .video-desc {
@@ -290,6 +313,10 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+            max-height: 2.8em;
+            margin-top: 0.2rem;
         }
 
         /* 骨架屏优化 */
@@ -317,6 +344,7 @@
 
         .skeleton-content {
             padding: 0.75rem;
+            min-height: 80px;
         }
 
         .skeleton-line {
@@ -328,6 +356,29 @@
 
         .skeleton-line:last-child {
             width: 60%;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .el-icon {
+            font-size: 3rem;
+            color: var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            margin: 0.5rem 0;
+            font-size: 1rem;
+        }
+
+        .empty-state .sub-text {
+            font-size: 0.9rem;
         }
 
         /* 分页优化 */
@@ -378,6 +429,21 @@
                 font-size: 0.9rem;
             }
 
+            .video-card .video-info {
+                min-height: 70px;
+                padding: 0.5rem;
+            }
+
+            .video-card .video-title {
+                font-size: 0.9rem;
+                line-height: 1.25;
+            }
+
+            .video-card .video-desc {
+                font-size: 0.75rem;
+                line-height: 1.35;
+            }
+
             .video-grid,
             .skeleton-grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -399,7 +465,7 @@
 </head>
 <body>
 
-<div id="app">
+<div id="app" v-cloak>
     <!-- 顶部导航栏 -->
     <div class="navbar">
         <div class="logo">慕课Lite</div>
@@ -467,28 +533,41 @@
             </div>
 
             <div v-else class="video-grid">
+                <!-- 空状态提示 -->
+                <div v-if="videos.length === 0" class="empty-state">
+                    <i class="el-icon-folder-opened"></i>
+                    <p>没有找到相关内容</p>
+                    <p class="sub-text" v-if="searchKeyword.trim() !== ''">尝试其他关键词搜索</p>
+                    <p class="sub-text" v-else>该分类下暂无视频</p>
+                </div>
+
+                <!-- 视频列表 -->
                 <div v-for="video in videos" :key="video.id" class="video-card">
                     <div class="image-wrapper">
-                        <div v-if="!loadedImages[video.id]" class="placeholder"></div>
+                        <div v-if="!loadedImages[video.id] && !errorImages[video.id]" class="placeholder"></div>
+                        <div v-if="errorImages[video.id]" class="error-placeholder">
+                            图片加载失败
+                        </div>
                         <img
+                                v-show="!errorImages[video.id]"
                                 :src="video.cover"
                                 :alt="video.title"
                                 @load="onImageLoad(video.id)"
+                                @error="onImageError(video.id)"
                                 :style="{ opacity: loadedImages[video.id] ? 1 : 0 }"
                         />
                     </div>
                     <div class="video-info">
-                        <div class="video-title">{{ video.title }}</div>
-                        <div class="video-desc">{{ video.description }}</div>
+                        <div class="video-title" :title="video.title">{{ video.title }}</div>
+                        <div class="video-desc" :title="video.description">{{ video.description }}</div>
                     </div>
                 </div>
             </div>
         </transition>
 
         <!-- 分页组件 -->
-        <div v-if="totalVideos > pageSize" class="pagination-container">
+        <div v-if="totalVideos > pageSize && videos.length > 0" class="pagination-container">
             <el-pagination
-                    background
                     @current-change="handlePageChange"
                     :current-page="currentPage"
                     :page-size="pageSize"
@@ -513,8 +592,9 @@
             currentPage: 1,
             pageSize: 8,
             totalVideos: 0,
-            loadedImages: {},  // 记录图片加载状态
-            showSearch: false   // 控制搜索框显示
+            loadedImages: {},
+            errorImages: {},
+            showSearch: false
         },
         methods: {
             switchTab(id) {
@@ -535,7 +615,7 @@
                 if (this.searchKeyword.trim() === '') return;
                 this.currentPage = 1;
                 this.loadVideos();
-                this.showSearch = false; // 搜索后隐藏搜索框
+                this.showSearch = false;
             },
             onSearchClear() {
                 this.searchKeyword = '';
@@ -550,6 +630,7 @@
                 this.loading = true;
                 this.videos = [];
                 this.loadedImages = {};
+                this.errorImages = {};
 
                 const params = {
                     categoryId: this.activeTab,
@@ -558,7 +639,6 @@
                     size: this.pageSize
                 };
 
-                // 发送POST请求获取视频列表
                 axios.post('/api/getVideoPage', params)
                     .then(response => {
                         if (response.data && response.data.code === 200) {
@@ -579,6 +659,9 @@
             },
             onImageLoad(id) {
                 this.$set(this.loadedImages, id, true);
+            },
+            onImageError(id) {
+                this.$set(this.errorImages, id, true);
             }
         },
         mounted() {

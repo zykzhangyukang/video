@@ -29,7 +29,7 @@
         AND category_id = #{categoryId}
       </if>
       <if test="keyword != null and keyword != ''">
-        AND title LIKE CONCAT('%', #{title}, '%')
+        AND title LIKE CONCAT('%', #{keyword}, '%')
       </if>
       AND is_published = 1
     </where>
