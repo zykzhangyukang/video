@@ -4,16 +4,71 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>500 - 服务器内部错误</title>
+    <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
+    <script th:src="@{/libs/vue.js}"></script>
+    <script th:src="@{/libs/element-ui.min.js}"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #606266;
+        }
+        #app {
+            text-align: center;
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 90vw;
+            user-select: none;
+        }
+        h1 {
+            font-size: 96px;
+            font-weight: bold;
+            color: #f56c6c;
+            margin: 0 0 20px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .el-button {
+            font-size: 16px;
+            padding: 10px 30px;
+        }
+    </style>
 </head>
 <body>
-
-<div>
+<div id="app">
     <h1>500</h1>
-    <p>服务器发生了一些错误，请稍后再试。</p>
-    <a th:href="@{/}" onclick="window.top.location.href=this.href; return false;">
+    <p>服务器内部发生错误，请稍后再试</p>
+    <el-button type="danger" icon="el-icon-refresh" @click="reloadPage">
+        重试
+    </el-button>
+    <el-button type="primary" icon="el-icon-arrow-left" style="margin-left: 16px;" @click="goHome">
         返回首页
-    </a>
+    </el-button>
 </div>
 
+<script>
+    Vue.use(ELEMENT);
+    new Vue({
+        el: '#app',
+        methods: {
+            reloadPage() {
+                window.location.reload();
+            },
+            goHome() {
+                window.top.location.href = '/';
+            }
+        }
+    });
+</script>
 </body>
 </html>

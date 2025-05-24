@@ -4,16 +4,65 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>404 - 页面不存在</title>
+    <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
+    <script th:src="@{/libs/vue.js}"></script>
+    <script th:src="@{/libs/element-ui.min.js}"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #fafafa;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #909399; /* 柔和灰 */
+        }
+        #app {
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 90vw;
+            text-align: center;
+        }
+        h1 {
+            font-size: 96px;
+            font-weight: 700;
+            color: #67c23a; /* 活力绿 */
+            margin: 0 0 20px;
+            user-select: none;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .el-button {
+            font-size: 16px;
+            padding: 10px 32px;
+        }
+    </style>
 </head>
 <body>
-
-<div>
+<div id="app">
     <h1>404</h1>
-    <p>抱歉，页面找不到了</p>
-    <a th:href="@{/}" onclick="window.top.location.href=this.href; return false;">
+    <p>抱歉，您访问的页面找不到了</p>
+    <el-button type="success" @click="goHome" icon="el-icon-arrow-left">
         返回首页
-    </a>
+    </el-button>
 </div>
 
+<script>
+    Vue.use(ELEMENT);
+    new Vue({
+        el: '#app',
+        methods: {
+            goHome() {
+                window.top.location.href = '/';
+            }
+        }
+    });
+</script>
 </body>
 </html>

@@ -22,7 +22,7 @@
             background: #fff;
             padding: 24px 28px;
             border-radius: 5px;
-            box-shadow: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 360px;
             margin: auto;
@@ -30,7 +30,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 1px solid #e0e6ed; /* 轻微边框勾勒形状 */
+            border: 1px solid #e0e6ed;
         }
 
         .login-header h3 {
@@ -150,7 +150,8 @@
         </el-form-item>
 
         <el-form-item>
-            <el-checkbox v-model="form.rememberMe" name="remember-me">记住我</el-checkbox>
+            <el-checkbox v-model="form.rememberMe">记住我</el-checkbox>
+            <input type="hidden" name="remember-me" :value="form.rememberMe ? 'true' : 'false'"/>
         </el-form-item>
 
         <el-form-item class="submit-btn">
