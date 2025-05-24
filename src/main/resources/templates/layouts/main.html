@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title layout:title-pattern="$CONTENT_TITLE - 慕课Lite">慕课Lite</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <!-- 引入 ElementUI、你的样式、Vue -->
+    <script th:src="@{/js/vue.min.js}"></script>
+    <script th:src="@{/js/axios.min.js}"></script>
+    <script th:src="@{/js/element-ui.min.js}"></script>
+    <link th:href="@{/css/element-ui.css}" rel="stylesheet"/>
+</head>
+
+<body>
+
+<header th:replace="fragments/navbar :: navbar"></header>
+
+<main layout:fragment="content">
+    <!-- 各页面内容插进这里 -->
+</main>
+
+<footer>© 2025 慕课Lite</footer>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!-- fragments/navbar.html -->
+<div class="navbar" th:fragment="navbar" xmlns:sec="http://www.w3.org/1999/xhtml">
+    <div class="logo">慕课Lite</div>
+
+    <div class="user-info" sec:authorize="isAuthenticated()">
+        <img th:src="${#authentication.principal.avatarUrl}" alt="头像" />
+        <span class="nickname" th:text="${#authentication.principal.nickname}">昵称</span>
+        <a th:href="@{/logout}">退出</a>
+    </div>
+
+    <div sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">登录</a>
+        <a th:href="@{/register}">注册</a>
+    </div>
+</div>
