@@ -116,13 +116,14 @@
             align-items: center;
             margin-bottom: 1.5rem;
             position: relative;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
         }
 
         /* 标签页优化 */
         .custom-tabs {
             display: flex;
             gap: 1rem;
-            border-bottom: 1px solid var(--border-color);
             padding: 0 0.5rem;
             overflow-x: auto;
             scrollbar-width: none; /* Firefox */
@@ -496,18 +497,15 @@
         </div>
     </div>
 </div>
-
+<script th:inline="javascript">
+    let tabs = [[${videoCategories}]];
+</script>
 <script>
     new Vue({
         el: '#app',
         data: {
             activeTab: 'all',
-            tabs: [
-                { name: 'all', label: '全部' },
-                { name: 'frontend', label: '前端' },
-                { name: 'backend', label: '后端' },
-                { name: 'ai', label: 'AI' }
-            ],
+            tabs: tabs,
             videos: [],
             loading: false,
             searchKeyword: '',
