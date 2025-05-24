@@ -1,17 +1,357 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="zh-CN">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>主页</title>
+    <meta charset="UTF-8" />
+    <title>视频首页</title>
+    <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
+    <script th:src="@{/libs/vue.js}"></script>
+    <script th:src="@{/libs/element-ui.min.js}"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fa;
+        }
+        #app {
+            min-height: 100vh;
+        }
+        .navbar {
+            background: #1f2d3d;
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .user-info img {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+        }
+        .navbar .user-info .nickname {
+            margin-right: 12px;
+            font-weight: 500;
+        }
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 10px;
+            transition: color 0.3s;
+        }
+        .navbar a:hover {
+            color: #ffd04b;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 60px; /* 给分页留点底部空间 */
+        }
+        .video-info {
+            padding-top: 10px;
+        }
+        .video-card {
+            margin-bottom: 24px;
+        }
+        /* 自定义 Tabs 样式 */
+        .custom-tabs {
+            display: flex;
+            gap: 20px;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 20px;
+            padding: 0 10px;
+            background: #fff;
+        }
+        .tab-item {
+            padding: 10px 4px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #555;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .tab-item::after {
+            content: '';
+            display: block;
+            height: 2px;
+            background: transparent;
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            transition: background 0.3s;
+        }
+        .tab-item:hover {
+            color: #409eff;
+        }
+        .tab-item.active {
+            color: #409eff;
+        }
+        .tab-item.active::after {
+            background: #409eff;
+        }
+        /* fade 动画 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.4s ease;
+        }
+        .fade-enter, .fade-leave-to {
+            opacity: 0;
+        }
+        /* 搜索框容器 */
+        .search-container {
+            max-width: 400px;
+            margin: 0 auto 30px;
+            display: flex;
+        }
+        .search-container input {
+            flex: 1;
+        }
+
+        /* 图片容器固定大小 + 占位背景 */
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            border-radius: 6px;
+            background-color: #e0e0e0; /* 占位灰 */
+            overflow: hidden;
+        }
+        .image-wrapper img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+        .image-wrapper .placeholder {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: loadingShimmer 1.5s infinite;
+        }
+        @keyframes loadingShimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+        /* 响应式微调 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 20px 10px 60px;
+            }
+            .custom-tabs {
+                gap: 12px;
+                padding: 0 5px;
+            }
+            .search-container {
+                max-width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>
-    欢迎回来，
-    <span sec:authorize="isAuthenticated()" th:text="${#authentication.name}">用户</span>
-    <span th:text="${#authentication.principal.nickname}">昵称</span>
-    <img th:src="${#authentication.principal.avatarUrl}" alt="头像" />
-</h2>
-<a th:href="@{/logout}" class="logout">退出登录</a>
+
+<div id="app">
+    <!-- 顶部导航栏 -->
+    <div class="navbar">
+        <div class="logo">慕课Lite</div>
+
+        <div class="user-info" sec:authorize="isAuthenticated()">
+            <img th:src="${#authentication.principal.avatarUrl}" alt="头像" />
+            <span class="nickname" th:text="${#authentication.principal.nickname}">昵称</span>
+            <a th:href="@{/logout}">退出</a>
+        </div>
+
+        <div sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}">登录</a> /
+            <a th:href="@{/register}">注册</a>
+        </div>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="main-container">
+        <div class="custom-tabs">
+            <div
+                    v-for="tab in tabs"
+                    :key="tab.name"
+                    :class="['tab-item', { active: activeTab === tab.name }]"
+                    @click="switchTab(tab.name)"
+            >
+                {{ tab.label }}
+            </div>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <el-input
+                    placeholder="搜索视频关键词"
+                    v-model="searchKeyword"
+                    clearable
+                    @clear="onSearchClear"
+                    @keyup.enter.native="onSearch"
+            >
+                <template slot="append">
+                    <el-button @click="onSearch" type="primary">搜索</el-button>
+                </template>
+            </el-input>
+        </div>
+
+        <!-- 视频列表或骨架屏 -->
+        <div v-if="loading">
+            <el-row :gutter="20" style="margin-top: 20px;">
+                <el-col v-for="n in pageSize" :key="n" :xs="24" :sm="12" :md="8" :lg="6" class="video-card">
+                    <el-card shadow="hover" :body-style="{ padding: '10px' }">
+                        <el-skeleton :loading="true" animated>
+                            <template #template>
+                                <el-skeleton-item variant="image" style="width: 100%; height: 150px; border-radius: 6px;"></el-skeleton-item>
+                                <div style="padding-top: 10px;">
+                                    <el-skeleton-item variant="text" style="width: 80%; height: 20px; margin-bottom: 6px;"></el-skeleton-item>
+                                    <el-skeleton-item variant="text" style="width: 60%; height: 14px;"></el-skeleton-item>
+                                </div>
+                            </template>
+                        </el-skeleton>
+                    </el-card>
+                </el-col>
+            </el-row>
+        </div>
+
+        <el-row v-else :gutter="20" style="margin-top: 20px;">
+            <el-col v-for="video in videos" :key="video.id" :xs="24" :sm="12" :md="8" :lg="6" class="video-card">
+                <el-card shadow="hover" :body-style="{ padding: '10px' }">
+                    <div class="image-wrapper">
+                        <div v-if="!loadedImages[video.id]" class="placeholder"></div>
+                        <img
+                                :src="video.cover"
+                                :alt="video.title"
+                                @load="onImageLoad(video.id)"
+                                :style="{ opacity: loadedImages[video.id] ? 1 : 0 }"
+                        />
+                    </div>
+                    <div class="video-info">
+                        <div style="font-weight: bold;">{{ video.title }}</div>
+                        <div style="color: #888; font-size: 12px;">{{ video.description }}</div>
+                    </div>
+                </el-card>
+            </el-col>
+        </el-row>
+
+        <!-- 分页组件 -->
+        <div style="text-align: center; margin-top: 20px;">
+            <el-pagination
+                    background
+                    @current-change="handlePageChange"
+                    :current-page="currentPage"
+                    :page-size="pageSize"
+                    layout="prev, pager, next"
+                    :total="totalVideos">
+            </el-pagination>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            activeTab: 'all',
+            tabs: [
+                { name: 'all', label: '全部' },
+                { name: 'frontend', label: '前端' },
+                { name: 'backend', label: '后端' },
+                { name: 'ai', label: 'AI' }
+            ],
+            videos: [],
+            loading: false,
+            searchKeyword: '',
+            currentPage: 1,
+            pageSize: 8,
+            totalVideos: 0,
+            loadedImages: {}  // 记录图片加载状态
+        },
+        methods: {
+            switchTab(name) {
+                if (this.activeTab === name) return;
+                this.activeTab = name;
+                this.currentPage = 1;
+                this.loadVideos();
+            },
+            onSearch() {
+                this.currentPage = 1;
+                this.loadVideos();
+            },
+            onSearchClear() {
+                this.searchKeyword = '';
+                this.currentPage = 1;
+                this.loadVideos();
+            },
+            handlePageChange(page) {
+                this.currentPage = page;
+                this.loadVideos();
+            },
+            loadVideos() {
+                this.loading = true;
+                this.videos = [];
+                this.loadedImages = {};
+
+                setTimeout(() => {
+                    const allVideos = Array.from({ length: 50 }).map((_, i) => {
+                        const types = ['all', 'frontend', 'backend', 'ai'];
+                        return {
+                            id: i + 1,
+                            title: `视频标题 ${i + 1}`,
+                            description: `这是视频${i + 1}的简介。`,
+                            cover: 'https://picsum.photos/300/150?random=' + (i + 1),
+                            type: types[i % types.length]
+                        };
+                    });
+
+                    let filtered = allVideos;
+                    if (this.activeTab !== 'all') {
+                        filtered = filtered.filter(v => v.type === this.activeTab);
+                    }
+                    if (this.searchKeyword.trim() !== '') {
+                        const kw = this.searchKeyword.trim().toLowerCase();
+                        filtered = filtered.filter(v => v.title.toLowerCase().includes(kw) || v.description.toLowerCase().includes(kw));
+                    }
+
+                    this.totalVideos = filtered.length;
+                    const start = (this.currentPage - 1) * this.pageSize;
+                    const end = start + this.pageSize;
+                    this.videos = filtered.slice(start, end);
+
+                    this.loading = false;
+                }, 800);
+            },
+            onImageLoad(id) {
+                this.$set(this.loadedImages, id, true);
+            }
+        },
+        mounted() {
+            this.loadVideos();
+        }
+    });
+</script>
+
 </body>
 </html>
