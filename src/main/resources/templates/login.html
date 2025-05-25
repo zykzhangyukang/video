@@ -14,7 +14,6 @@
             padding: 0;
             background: #f5f7fa;
             height: 100%;
-            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
         }
         [v-cloak] {
@@ -97,6 +96,67 @@
         .error-message {
             font-size: 12px;
             margin-top: 10px;
+        }
+
+        /* 响应式设计 */
+        @media screen and (max-width: 768px) {
+            #app {
+                max-width: 90%;
+                padding: 20px;
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
+                margin: 40px auto;
+            }
+
+            .login-header h3 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            .el-input__inner {
+                height: 40px;
+                font-size: 14px;
+            }
+
+            .el-button {
+                height: 40px;
+                font-size: 14px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            #app {
+                padding: 16px;
+                border: none;
+                box-shadow: none;
+                margin: 20px auto;
+                background: #fff;
+            }
+
+            .login-header h3 {
+                font-size: 18px;
+                margin-bottom: 16px;
+            }
+
+            .el-form-item {
+                margin-bottom: 12px;
+            }
+
+            .captcha-img {
+                height: 38px;
+            }
+
+            .footer-links {
+                margin-top: 16px;
+                font-size: 13px;
+            }
+
+            body {
+                background: #fff;
+                overflow: hidden;
+            }
         }
     </style>
 </head>
