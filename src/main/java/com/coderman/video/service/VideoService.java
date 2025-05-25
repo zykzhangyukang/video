@@ -23,4 +23,11 @@ public interface VideoService {
      */
     List<VideoVO> selectFirstPage(VideoPageRequest videoPageRequest);
 
+    /**
+     * 首页第一屏视频
+     * @param videoPageRequest 参数
+     * @return
+     */
+    Long selectFirstCount(VideoPageRequest videoPageRequest);
+
 }

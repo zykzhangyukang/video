@@ -371,6 +371,7 @@
     <div :class="['search-wrapper', { expanded: showSearch }]">
         <div class="search-container">
             <el-input
+                    size="small"
                     placeholder="搜索视频关键词"
                     v-model="searchKeyword"
                     clearable
@@ -436,7 +437,7 @@
                 @current-change="handlePageChange"
                 :current-page="currentPage"
                 :page-size="pageSize"
-                layout="prev, pager, next"
+                layout="prev, pager, next, jumper"
                 :total="totalVideos">
         </el-pagination>
     </div>
@@ -444,16 +445,18 @@
 </div>
 
 <script layout:fragment="script" th:inline="javascript">
-    let tabs = [[${videos}]];
+    let videos = [[${videos}]];
+    let totalVideos = [[${totalVideos}]];
+    let pageSize = [[${pageSize}]];
     new Vue({
         el: '#index-wrapper',
         data: {
-            videos: tabs,
+            videos: videos,
             loading: false,
             searchKeyword: '',
             currentPage: 1,
-            pageSize: 8,
-            totalVideos: 0,
+            pageSize: pageSize,
+            totalVideos: totalVideos,
             loadedImages: {},
             errorImages: {},
             showSearch: false
@@ -481,6 +484,10 @@
             handlePageChange(page) {
                 this.currentPage = page;
                 this.loadVideos();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             },
             loadVideos() {
                 this.loading = true;

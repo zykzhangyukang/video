@@ -1,5 +1,6 @@
 package com.coderman.video.service.impl;
 
+import com.coderman.video.constant.CommonConstant;
 import com.coderman.video.mapper.VideoMapper;
 import com.coderman.video.request.VideoPageRequest;
 import com.coderman.video.service.VideoService;
@@ -20,7 +21,6 @@ public class VideoServiceImpl implements VideoService {
     @Resource
     private VideoMapper videoMapper;
 
-    private final Integer PAGE_SIZE = 8;
 
     @Override
     public ResultVO<Map<String, Object>> getVideoPage(VideoPageRequest videoPageRequest) {
@@ -28,8 +28,8 @@ public class VideoServiceImpl implements VideoService {
         if (videoPageRequest.getPage() == null || videoPageRequest.getPage() <= 0) {
             videoPageRequest.setPage(1);
         }
-        if (videoPageRequest.getPage() == null || videoPageRequest.getPage() <= 0 || videoPageRequest.getSize() > 30) {
-            videoPageRequest.setSize(PAGE_SIZE);
+        if (videoPageRequest.getPage() == null || videoPageRequest.getPage() <= 0 || videoPageRequest.getSize() > CommonConstant.VIDEO_PAGE_SIZE) {
+            videoPageRequest.setSize(CommonConstant.VIDEO_PAGE_SIZE);
         }
 
         videoPageRequest.setOffset((videoPageRequest.getPage() - 1) * videoPageRequest.getSize());
@@ -49,7 +49,12 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public List<VideoVO> selectFirstPage(VideoPageRequest videoPageRequest) {
-        videoPageRequest.setSize(PAGE_SIZE);
+        videoPageRequest.setSize(CommonConstant.VIDEO_PAGE_SIZE);
         return videoMapper.selectFirstPage(videoPageRequest);
+    }
+
+    @Override
+    public Long selectFirstCount(VideoPageRequest videoPageRequest) {
+        return videoMapper.countVideoPage(videoPageRequest);
     }
 }
