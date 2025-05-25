@@ -1,66 +1,59 @@
-<!doctype html>
-<html
-        xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>顺序分片上传 - Axios版</title>
-    <link rel="stylesheet" th:href="@{/libs/nprogress.css}">
+    <title>极简 Hash + 进度</title>
 </head>
 <body>
-<input id="file" type="file">
 
-<script th:src="@{/libs/nprogress.js}"></script>
-<script th:src="@{/libs/axios.min.js}"></script>
+<input id="file" type="file"> 进度：xxx
+
 <script>
-    const fileInput = document.querySelector('#file');
+    const fileInput = document.getElementById('file');
+    const chunkSize = 1024 * 1024; // 1MB
+    const worker = new Worker('/libs/worker.js');
 
-    fileInput.addEventListener('change', async (e) => {
+    let totalChunks = 0;
+    let receivedChunks = 0;
+
+    worker.onmessage = function (e) {
+        const data = e.data;
+
+        if (data.type === 'progress') {
+            receivedChunks++;
+            const percent = Math.floor((receivedChunks / totalChunks) * 100);
+            console.log(`进度：${percent}%`);
+        }
+
+        if (data.type === 'final') {
+            console.log('最终文件 hash：', data.finalHash);
+        }
+    };
+
+    fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        const chunkSize = 1024 * 1024; // 每片1MB
-        const total = Math.ceil(file.size / chunkSize);
+        if (!file) return;
 
-        console.log(`文件大小：${file.size} 字节，总共 ${total} 片`);
+        totalChunks = Math.ceil(file.size / chunkSize);
+        receivedChunks = 0;
 
-        NProgress.start();
-        NProgress.set(0);
+        worker.postMessage({ type: 'init', total: totalChunks });
 
-        for (let i = 0; i < total; i++) {
+        for (let i = 0; i < totalChunks; i++) {
             const start = i * chunkSize;
             const end = Math.min(start + chunkSize, file.size);
             const chunk = file.slice(start, end);
 
-            const formData = new FormData();
-            formData.append("file", chunk);
-            formData.append("filename", file.name);
-            formData.append("index", i.toString());
-            formData.append("total", total.toString());
-
-            try {
-                const response = await axios.post('/api/videos/upload', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    },
-                    timeout: 10000
-                });
-
-                if (response.data && response.data.code === 200) {
-                    console.log(`第 ${i} 片上传成功`);
-                    NProgress.set((i + 1) / total);
+            chunk.arrayBuffer().then(buffer => {
+                if (buffer instanceof ArrayBuffer) {
+                    worker.postMessage({ type: 'chunk', index: i, buffer }, [buffer]);
                 } else {
-                    console.error(`第 ${i} 片上传失败：返回异常`);
-                    NProgress.done(); // 停止进度条
-                    break;
+                    worker.postMessage({ type: 'chunk', index: i, buffer });
                 }
-            } catch (error) {
-                console.error(`第 ${i} 片上传异常：`, error);
-                NProgress.done();
-                break;
-            }
+            });
         }
-
-        NProgress.done();
-        console.log("上传流程结束");
     });
 </script>
+
 </body>
 </html>
