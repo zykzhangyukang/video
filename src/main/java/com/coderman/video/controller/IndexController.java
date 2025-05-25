@@ -30,7 +30,6 @@ public class IndexController {
     @Resource
     private VideoService videoService;
 
-
     @ApiOperation(value = "首页路由", notes = "首页路由")
     @GetMapping(value = {"/"})
     public String indexPage(Model model, VideoPageRequest videoPageRequest) {

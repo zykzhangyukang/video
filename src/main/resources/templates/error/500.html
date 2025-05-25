@@ -4,11 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>500 - 服务器内部错误</title>
+
+    <!-- 样式 & 组件 -->
     <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
     <script th:src="@{/libs/vue.js}"></script>
     <script th:src="@{/libs/element-ui.min.js}"></script>
+
     <style>
-        body, html {
+        html, body {
             height: 100%;
             margin: 0;
             background: #f0f2f5;
@@ -18,29 +21,88 @@
             align-items: center;
             color: #606266;
         }
+
         #app {
-            text-align: center;
             background: #fff;
             padding: 40px 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            max-width: 420px;
             width: 90vw;
-            user-select: none;
+            text-align: center;
+            transition: all 0.3s ease;
         }
+
         h1 {
             font-size: 96px;
             font-weight: bold;
             color: #f56c6c;
             margin: 0 0 20px;
+            user-select: none;
+            transition: all 0.3s ease;
         }
+
         p {
             font-size: 18px;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
         }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
         .el-button {
             font-size: 16px;
-            padding: 10px 30px;
+            padding: 10px 32px;
+            transition: all 0.3s ease;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            #app {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 72px;
+            }
+
+            p {
+                font-size: 16px;
+            }
+
+            .el-button {
+                font-size: 15px;
+                padding: 10px 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #app {
+                padding: 20px 16px;
+                width: 100%;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            h1 {
+                font-size: 56px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+
+            .el-button {
+                width: 100%;
+                padding: 10px 0;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -48,12 +110,11 @@
 <div id="app">
     <h1>500</h1>
     <p>服务器内部发生错误，请稍后再试</p>
-    <el-button type="danger" icon="el-icon-refresh" @click="reloadPage">
-        重试
-    </el-button>
-    <el-button type="primary" icon="el-icon-arrow-left" style="margin-left: 16px;" @click="goHome">
-        返回首页
-    </el-button>
+    <div class="button-group">
+        <el-button type="primary" icon="el-icon-arrow-left" @click="goHome">
+            返回首页
+        </el-button>
+    </div>
 </div>
 
 <script>
@@ -61,9 +122,6 @@
     new Vue({
         el: '#app',
         methods: {
-            reloadPage() {
-                window.location.reload();
-            },
             goHome() {
                 window.top.location.href = '/';
             }
