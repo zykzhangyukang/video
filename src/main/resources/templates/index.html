@@ -205,12 +205,18 @@
         max-height: 1.3em;
     }
 
+    /* 优化后的video-meta部分 */
+    .video-card .video-meta-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
     .video-card .video-meta {
         display: flex;
-        align-items: center;
         flex-wrap: wrap;
+        align-items: center;
         gap: 0.5rem;
-        margin-bottom: 0.5rem;
         font-size: 0.75rem;
         color: var(--text-secondary);
     }
@@ -218,10 +224,28 @@
     .video-card .video-meta .meta-item {
         display: flex;
         align-items: center;
+        min-width: 0;
+        flex-shrink: 0;
     }
 
-    .video-card .video-meta .el-tag {
-        margin-right: 0.25rem;
+    .video-card .video-meta .meta-text {
+        margin-left: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 80px;
+    }
+
+    .video-card .video-meta .meta-time {
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .video-card .video-meta .admin-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-top: 0.25rem;
     }
 
     .video-card .video-desc {
@@ -234,6 +258,7 @@
         text-overflow: ellipsis;
         line-height: 1.4;
         max-height: 2.8em;
+        margin-top: 0.5rem;
     }
 
     /* 骨架屏优化 */
@@ -347,6 +372,10 @@
             line-height: 1.35;
         }
 
+        .video-card .video-meta .meta-text {
+            max-width: 80px;
+        }
+
         .video-grid,
         .skeleton-grid {
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -362,6 +391,14 @@
         .video-grid,
         .skeleton-grid {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .video-card .video-meta .meta-text {
+            max-width: 75px;
+        }
+
+        .video-card .video-meta {
+            gap: 0.25rem;
         }
     }
 </style>
@@ -444,18 +481,35 @@
                 <div class="video-info">
                     <div class="video-title" :title="video.title">{{ video.title }}</div>
                     <div class="video-desc" :title="video.description">{{ video.description }}</div>
-                    <!-- 仅管理员可见的meta信息 -->
-                    <div class="video-meta" v-if="isAdmin">
-                        <el-tag v-if="video.status !== undefined" size="mini"
-                                :type="video.status === 1 ? 'success' : 'info'">
-                            {{ video.status === 1 ? '已发布' : '未发布' }}
-                        </el-tag>
-                        <span class="meta-item" v-if="video.categoryName">
-                            <i class="el-icon-folder-opened"></i> {{ video.categoryName }}
-                        </span>
-                        <span class="meta-item" v-if="video.createdAt">
-                            <i class="el-icon-time"></i> {{ formatDate(video.createdAt) }}
-                        </span>
+
+                    <!-- 优化后的meta信息布局 -->
+                    <div class="video-meta-container">
+                        <div class="video-meta">
+                            <!-- 状态标签 -->
+                            <el-tag v-if="isAdmin && video.status !== undefined" size="mini"
+                                    :type="video.status === 1 ? 'success' : 'info'">
+                                {{ video.status === 1 ? '已发布' : '未发布' }}
+                            </el-tag>
+
+                            <!-- 分类信息 -->
+                            <span class="meta-item" v-if="video.categoryName">
+                                <i class="el-icon-folder-opened"></i>
+                                <span class="meta-text" :title="video.categoryName">{{ video.categoryName }}</span>
+                            </span>
+
+                            <!-- 创建时间 -->
+                            <span class="meta-item meta-time" v-if="video.createdAt">
+                                <i class="el-icon-time"></i>
+                                <span>{{ formatDate(video.createdAt) }}</span>
+                            </span>
+                        </div>
+
+                        <!-- 管理员操作按钮 -->
+                        <div class="admin-actions" v-if="isAdmin">
+                            <el-button size="mini">编辑</el-button>
+                            <el-button size="mini">删除</el-button>
+                            <el-button size="mini">下架</el-button>
+                        </div>
                     </div>
                 </div>
             </div>
