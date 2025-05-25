@@ -6,24 +6,116 @@
 
 <head>
     <meta charset="UTF-8">
-    <title layout:title-pattern="$CONTENT_TITLE - 慕课Lite">慕课Lite</title>
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <!-- 引入 ElementUI、你的样式、Vue -->
-    <script th:src="@{/js/vue.min.js}"></script>
-    <script th:src="@{/js/axios.min.js}"></script>
-    <script th:src="@{/js/element-ui.min.js}"></script>
-    <link th:href="@{/css/element-ui.css}" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
+    <script th:src="@{/libs/vue.js}"></script>
+    <script th:src="@{/libs/element-ui.min.js}"></script>
+    <script th:src="@{/libs/axios.min.js}"></script>
+    <style layout:fragment="style"></style>
+    <style>
+        :root {
+            --primary-color: #409EFF;
+            --primary-hover: #66b1ff;
+            --text-primary: #303133;
+            --text-regular: #606266;
+            --text-secondary: #909399;
+            --border-color: #e4e7ed;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 导航栏优化 */
+        .navbar {
+            background: #1f2d3d;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar .logo {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar .user-info img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .navbar .user-info .nickname {
+            font-weight: 500;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .navbar a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .navbar a:hover {
+            color: #ffd04b;
+            background: rgba(255,255,255,0.1);
+        }
+
+    </style>
 </head>
 
 <body>
 
-<header th:replace="fragments/navbar :: navbar"></header>
+<div id="app">
+    <!-- 导航栏 -->
+    <header th:replace="fragments/navbar :: navbar"></header>
 
-<main layout:fragment="content">
-    <!-- 各页面内容插进这里 -->
-</main>
+    <!-- 主体内容部分 -->
+    <main layout:fragment="content">
+    </main>
+</div>
 
-<footer>© 2025 慕课Lite</footer>
 
+<!-- js部分 -->
+<script layout:fragment="script"></script>
 </body>
 </html>
