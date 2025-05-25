@@ -447,7 +447,6 @@
     new Vue({
         el: '#index-wrapper',
         data: {
-            activeName: [[${activeName ?: 'all'}]],
             videos: [],
             loading: false,
             searchKeyword: '',
@@ -489,7 +488,6 @@
                 this.errorImages = {};
 
                 const params = {
-                    categoryId: this.activeName,
                     keyword: this.searchKeyword,
                     page: this.currentPage,
                     size: this.pageSize

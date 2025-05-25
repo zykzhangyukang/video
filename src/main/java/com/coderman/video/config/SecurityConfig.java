@@ -81,7 +81,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .logout()
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login") // 退出成功后跳转页面
+                .logoutSuccessUrl("/") // 退出成功后跳转页面
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint());
