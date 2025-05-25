@@ -444,10 +444,11 @@
 </div>
 
 <script layout:fragment="script" th:inline="javascript">
+    let tabs = [[${videos}]];
     new Vue({
         el: '#index-wrapper',
         data: {
-            videos: [],
+            videos: tabs,
             loading: false,
             searchKeyword: '',
             currentPage: 1,

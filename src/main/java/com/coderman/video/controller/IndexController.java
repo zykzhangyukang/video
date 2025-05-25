@@ -33,14 +33,12 @@ public class IndexController {
 
         // 视频分类
         List<CategoryVO> videoCategories = this.categoryService.selectAllCategory();
-
         // 列表首屏
         List<VideoVO> videos = this.videoService.selectFirstPage(videoPageRequest);
 
         model.addAttribute("categories", videoCategories);
         model.addAttribute("videos", videos);
         model.addAttribute("activeName", StringUtils.defaultString(videoPageRequest.getName(), "all"));
-
         return "index";
     }
 

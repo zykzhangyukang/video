@@ -26,7 +26,14 @@
   <sql id="pageWhere">
     <where>
       <if test="name != null and name !=''">
-        AND category.name = #{name}
+        <choose>
+          <when test="name == 'all'">
+            AND 1 = 1
+          </when>
+          <otherwise>
+            AND category.name = #{name}
+          </otherwise>
+        </choose>
       </if>
       <if test="keyword != null and keyword != ''">
         AND video.title LIKE CONCAT('%', #{keyword}, '%')
