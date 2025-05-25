@@ -20,6 +20,8 @@ public class VideoServiceImpl implements VideoService {
     @Resource
     private VideoMapper videoMapper;
 
+    private final Integer PAGE_SIZE = 8;
+
     @Override
     public ResultVO<Map<String, Object>> getVideoPage(VideoPageRequest videoPageRequest) {
 
@@ -27,10 +29,10 @@ public class VideoServiceImpl implements VideoService {
             videoPageRequest.setPage(1);
         }
         if (videoPageRequest.getPage() == null || videoPageRequest.getPage() <= 0 || videoPageRequest.getSize() > 30) {
-            videoPageRequest.setSize(30);
+            videoPageRequest.setSize(PAGE_SIZE);
         }
-        videoPageRequest.setOffset((videoPageRequest.getPage() - 1) * videoPageRequest.getSize());
 
+        videoPageRequest.setOffset((videoPageRequest.getPage() - 1) * videoPageRequest.getSize());
         Long total = videoMapper.countVideoPage(videoPageRequest);
 
         List<VideoVO> records = Lists.newArrayList();
@@ -43,5 +45,10 @@ public class VideoServiceImpl implements VideoService {
         result.put("total", total);
         result.put("list", records);
         return ResultUtil.getSuccessMap(Map.class, result);
+    }
+
+    @Override
+    public List<VideoVO> selectFirstPage() {
+        return videoMapper.selectFirstPage(PAGE_SIZE);
     }
 }

@@ -1,7 +1,9 @@
 package com.coderman.video.controller;
 
 import com.coderman.video.service.CategoryService;
+import com.coderman.video.service.VideoService;
 import com.coderman.video.vo.CategoryVO;
+import com.coderman.video.vo.VideoVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,14 +22,20 @@ public class IndexController {
     @Resource
     private CategoryService categoryService;
 
+    @Resource
+    private VideoService videoService;
+
     @ApiOperation(value = "首页路由", notes = "首页路由")
     @GetMapping(value = {"/"})
     public String indexPage(Model model) {
         // 取所有视频分类
         List<CategoryVO> videoCategories = this.categoryService.selectAllCategory();
 
-        // 把数据放到Model里，供模板使用
+        // 视频默认第一页
+        List<VideoVO> videos = this.videoService.selectFirstPage();
+
         model.addAttribute("categories", videoCategories);
+        model.addAttribute("videos", videos);
 
         return "index";
     }

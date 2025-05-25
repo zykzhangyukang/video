@@ -50,6 +50,19 @@
     LIMIT #{size} OFFSET #{offset}
   </select>
 
+  <select id="selectFirstPage" resultType="com.coderman.video.vo.VideoVO">
+    SELECT
+    id,
+    category_id,
+    title,
+    description,
+    cover_url as cover
+    FROM
+    video
+    ORDER BY created_at DESC
+    LIMIT #{size}
+  </select>
+
   <!-- 查询总数量 -->
   <select id="countVideoPage" resultType="long">
     SELECT COUNT(1)
