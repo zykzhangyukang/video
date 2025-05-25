@@ -1,36 +1,32 @@
-importScripts('spark-md5.min.js');
+importScripts('/libs/spark-md5.min.js');
 
+let totalChunks = 0;
 let chunkHashes = [];
-let total = 0;
-let received = 0;
+let receivedChunks = 0;
 
-onmessage = function (e) {
-    const { type } = e.data;
+self.onmessage = function (e) {
+    const data = e.data;
 
-    if (type === 'init') {
-        total = e.data.total;
-        received = 0;
-        chunkHashes = new Array(total);
+    if (data.type === 'init') {
+        totalChunks = data.total;
+        chunkHashes = new Array(totalChunks);
+        receivedChunks = 0;
     }
 
-    if (type === 'chunk') {
-        const { index, buffer } = e.data;
+    if (data.type === 'chunk') {
+        const { index, buffer } = data;
 
         const spark = new SparkMD5.ArrayBuffer();
         spark.append(buffer);
-        const hash = spark.end();
+        chunkHashes[index] = spark.end();
+        receivedChunks++;
 
-        chunkHashes[index] = hash;
-        received++;
+        self.postMessage({ type: 'progress', index });
 
-        postMessage({ type: 'progress', index });
-
-        if (received === total) {
-            const finalSpark = new SparkMD5();
-            finalSpark.append(chunkHashes.join(''));
-            const finalHash = finalSpark.end();
-
-            postMessage({ type: 'final', finalHash });
+        if (receivedChunks === totalChunks) {
+            const fullStr = chunkHashes.join('');
+            const finalHash = SparkMD5.hash(fullStr);
+            self.postMessage({ type: 'final', finalHash });
         }
     }
 };

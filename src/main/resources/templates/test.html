@@ -6,11 +6,18 @@
 </head>
 <body>
 
-<input id="file" type="file"> 进度：xxx
+<h3>请选择文件：</h3>
+<input id="file" type="file">
+
+<p>进度：<span id="progress">0%</span></p>
+<p>最终文件 hash：<span id="hash">-</span></p>
 
 <script>
     const fileInput = document.getElementById('file');
-    const chunkSize = 1024 * 1024; // 1MB
+    const progressSpan = document.getElementById('progress');
+    const hashSpan = document.getElementById('hash');
+
+    const chunkSize = 1024 * 1024;
     const worker = new Worker('/libs/worker.js');
 
     let totalChunks = 0;
@@ -22,11 +29,11 @@
         if (data.type === 'progress') {
             receivedChunks++;
             const percent = Math.floor((receivedChunks / totalChunks) * 100);
-            console.log(`进度：${percent}%`);
+            progressSpan.textContent = percent + '%';
         }
 
         if (data.type === 'final') {
-            console.log('最终文件 hash：', data.finalHash);
+            hashSpan.textContent = data.finalHash;
         }
     };
 
@@ -36,6 +43,9 @@
 
         totalChunks = Math.ceil(file.size / chunkSize);
         receivedChunks = 0;
+
+        progressSpan.textContent = '0%';
+        hashSpan.textContent = '-';
 
         worker.postMessage({ type: 'init', total: totalChunks });
 
