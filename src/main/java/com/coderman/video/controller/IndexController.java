@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -36,7 +37,7 @@ public class IndexController {
 
 
     @ApiOperation(value = "首页路由", notes = "首页路由")
-    @GetMapping(value = {"/"})
+    @GetMapping(value = {""})
     public String indexPage(Model model, VideoPageRequest videoPageRequest) {
 
         // 视频分类

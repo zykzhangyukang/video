@@ -568,7 +568,7 @@
                     size: this.pageSize
                 };
 
-                axios.post('/api/getVideoPage', params)
+                axios.post('/api/videos', params)
                     .then(response => {
                         if (response.data && response.data.code === 200) {
                             const data = response.data.result;

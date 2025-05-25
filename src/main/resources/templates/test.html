@@ -1,12 +1,15 @@
 <!doctype html>
-<html>
+<html
+        xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>顺序分片上传 - Axios版</title>
+    <link rel="stylesheet" th:href="@{/libs/nprogress.css}">
 </head>
 <body>
 <input id="file" type="file">
 
+<script th:src="@{/libs/nprogress.js}"></script>
 <script th:src="@{/libs/axios.min.js}"></script>
 <script>
     const fileInput = document.querySelector('#file');
@@ -18,6 +21,9 @@
 
         console.log(`文件大小：${file.size} 字节，总共 ${total} 片`);
 
+        NProgress.start();
+        NProgress.set(0);
+
         for (let i = 0; i < total; i++) {
             const start = i * chunkSize;
             const end = Math.min(start + chunkSize, file.size);
@@ -26,11 +32,11 @@
             const formData = new FormData();
             formData.append("file", chunk);
             formData.append("filename", file.name);
-            formData.append("index", i+'');
-            formData.append("total", total+'');
+            formData.append("index", i.toString());
+            formData.append("total", total.toString());
 
             try {
-                const response = await axios.post('/upload', formData, {
+                const response = await axios.post('/api/videos/upload', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     },
@@ -39,16 +45,20 @@
 
                 if (response.data && response.data.code === 200) {
                     console.log(`第 ${i} 片上传成功`);
+                    NProgress.set((i + 1) / total);
                 } else {
-                    console.error(`第 ${i} 片上传失败：响应内容不合法`);
+                    console.error(`第 ${i} 片上传失败：返回异常`);
+                    NProgress.done(); // 停止进度条
                     break;
                 }
             } catch (error) {
                 console.error(`第 ${i} 片上传异常：`, error);
+                NProgress.done();
                 break;
             }
         }
 
+        NProgress.done();
         console.log("上传流程结束");
     });
 </script>

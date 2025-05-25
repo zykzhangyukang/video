@@ -3,6 +3,7 @@ package com.coderman.video.controller;
 import com.coderman.video.request.VideoPageRequest;
 import com.coderman.video.service.CategoryService;
 import com.coderman.video.service.VideoService;
+import com.coderman.video.utils.ResultUtil;
 import com.coderman.video.vo.CategoryVO;
 import com.coderman.video.vo.ResultVO;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class VideoController {
@@ -37,9 +39,16 @@ public class VideoController {
         return "publish";
     }
 
-    @PostMapping(value = "/api/getVideoPage")
+    @PostMapping(value = "/api/videos")
     @ResponseBody
     public ResultVO<Map<String, Object>> getVideoPage(@RequestBody VideoPageRequest videoPageRequest) {
         return this.videoService.getVideoPage(videoPageRequest);
+    }
+
+    @PostMapping(value = "/api/videos/upload")
+    @ResponseBody
+    public ResultVO<Void> videoUpload() throws InterruptedException {
+        TimeUnit.MILLISECONDS.sleep(200);
+        return ResultUtil.getSuccess();
     }
 }
