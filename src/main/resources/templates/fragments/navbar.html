@@ -3,6 +3,7 @@
     <div class="logo">慕课Lite</div>
 
     <div class="user-info" sec:authorize="isAuthenticated()">
+        <a th:href="@{/publish}"><i class="el-icon-upload2"></i>投稿</a>
         <img th:src="${#authentication.principal.avatarUrl}" alt="头像" />
         <span class="nickname" th:text="${#authentication.principal.nickname}">昵称</span>
         <a th:href="@{/logout}">退出</a>

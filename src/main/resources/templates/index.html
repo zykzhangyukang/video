@@ -241,13 +241,6 @@
         flex-shrink: 0;
     }
 
-    .video-card .video-meta .admin-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-        margin-top: 0.25rem;
-    }
-
     .video-card .video-desc {
         color: var(--text-secondary);
         font-size: 0.8rem;
@@ -408,7 +401,7 @@
 
     <!-- 导航部分 - 使用Thymeleaf渲染 -->
     <div class="tabs-container">
-        <div class="custom-tabs">
+        <div class="custom-tabs" th:with="activeName=${#request.getParameter('name') ?: 'all'}">
             <a th:each="tab : ${categories}"
                  th:class="${'tab-item' + (activeName == tab.name ? ' active' : '')}"
                  th:text="${tab.label}"
@@ -485,11 +478,6 @@
                     <!-- 优化后的meta信息布局 -->
                     <div class="video-meta-container">
                         <div class="video-meta">
-                            <!-- 状态标签 -->
-                            <el-tag v-if="isAdmin && video.status !== undefined" size="mini"
-                                    :type="video.status === 1 ? 'success' : 'info'">
-                                {{ video.status === 1 ? '已发布' : '未发布' }}
-                            </el-tag>
 
                             <!-- 分类信息 -->
                             <span class="meta-item" v-if="video.categoryName">
@@ -502,13 +490,6 @@
                                 <i class="el-icon-time"></i>
                                 <span>{{ formatDate(video.createdAt) }}</span>
                             </span>
-                        </div>
-
-                        <!-- 管理员操作按钮 -->
-                        <div class="admin-actions" v-if="isAdmin">
-                            <el-button size="mini">编辑</el-button>
-                            <el-button size="mini">删除</el-button>
-                            <el-button size="mini">下架</el-button>
                         </div>
                     </div>
                 </div>
@@ -533,7 +514,6 @@
     let videos = [[${videos}]];
     let totalVideos = [[${totalVideos}]];
     let pageSize = [[${pageSize}]];
-    let isAdmin = [[${isAdmin ? true : false}]];
 
     new Vue({
         el: '#index-wrapper',
@@ -547,7 +527,6 @@
             loadedImages: {},
             errorImages: {},
             showSearch: false,
-            isAdmin: isAdmin
         },
         methods: {
             toggleSearch() {

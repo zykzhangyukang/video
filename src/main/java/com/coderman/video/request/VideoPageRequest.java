@@ -1,6 +1,5 @@
 package com.coderman.video.request;
 
-import com.coderman.video.utils.SecurityUtils;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -21,7 +20,4 @@ public class VideoPageRequest {
 
     @ApiModelProperty(value = "关键词")
     private String keyword;
-
-    @ApiModelProperty(value = "是否管理员")
-    private boolean isAdmin = SecurityUtils.isAdmin();
 }
