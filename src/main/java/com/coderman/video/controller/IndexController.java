@@ -28,6 +28,13 @@ public class IndexController {
     @Resource
     private VideoService videoService;
 
+    @ApiOperation(value = "测试路由", notes = "测试路由")
+    @GetMapping(value = {"/test"})
+    public String testPage() {
+        return "test";
+    }
+
+
     @ApiOperation(value = "首页路由", notes = "首页路由")
     @GetMapping(value = {"/"})
     public String indexPage(Model model, VideoPageRequest videoPageRequest) {

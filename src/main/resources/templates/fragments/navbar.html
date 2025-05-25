@@ -1,6 +1,6 @@
 <!-- fragments/navbar.html -->
 <div class="navbar" th:fragment="navbar" xmlns:sec="http://www.w3.org/1999/xhtml">
-    <div class="logo">慕课Lite</div>
+    <div class="logo" th:onclick="|location.href='@{/}'|" >慕课Lite</div>
 
     <div class="user-info" sec:authorize="isAuthenticated()">
         <a th:href="@{/publish}"><i class="el-icon-upload2"></i>投稿</a>

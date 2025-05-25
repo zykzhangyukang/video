@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>顺序分片上传 - Axios版</title>
+</head>
+<body>
+<input id="file" type="file">
+
+<script th:src="@{/libs/axios.min.js}"></script>
+<script>
+    const fileInput = document.querySelector('#file');
+
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        const chunkSize = 1024 * 1024; // 每片1MB
+        const total = Math.ceil(file.size / chunkSize);
+
+        console.log(`文件大小：${file.size} 字节，总共 ${total} 片`);
+
+        for (let i = 0; i < total; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+            const chunk = file.slice(start, end);
+
+            const formData = new FormData();
+            formData.append("file", chunk);
+            formData.append("filename", file.name);
+            formData.append("index", i+'');
+            formData.append("total", total+'');
+
+            try {
+                const response = await axios.post('/upload', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    timeout: 10000
+                });
+
+                if (response.data && response.data.code === 200) {
+                    console.log(`第 ${i} 片上传成功`);
+                } else {
+                    console.error(`第 ${i} 片上传失败：响应内容不合法`);
+                    break;
+                }
+            } catch (error) {
+                console.error(`第 ${i} 片上传异常：`, error);
+                break;
+            }
+        }
+
+        console.log("上传流程结束");
+    });
+</script>
+</body>
+</html>
