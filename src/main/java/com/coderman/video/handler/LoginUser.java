@@ -19,9 +19,10 @@ public class LoginUser implements UserDetails {
     private String nickname;
     private String avatarUrl;
     private boolean locked;
+    private boolean isAdmin;
     private List<GrantedAuthority> authorities;
 
-    public LoginUser(Long id , String username, String password, String nickname, String avatarUrl, List<GrantedAuthority> authorities, boolean locked) {
+    public LoginUser(Long id, String username, String password, String nickname, String avatarUrl, List<GrantedAuthority> authorities, boolean locked) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -29,6 +30,7 @@ public class LoginUser implements UserDetails {
         this.avatarUrl = avatarUrl;
         this.authorities = authorities;
         this.locked = locked;
+        this.isAdmin = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }

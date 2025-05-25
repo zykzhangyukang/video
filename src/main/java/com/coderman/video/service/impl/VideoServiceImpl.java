@@ -5,6 +5,7 @@ import com.coderman.video.mapper.VideoMapper;
 import com.coderman.video.request.VideoPageRequest;
 import com.coderman.video.service.VideoService;
 import com.coderman.video.utils.ResultUtil;
+import com.coderman.video.utils.SecurityUtils;
 import com.coderman.video.vo.ResultVO;
 import com.coderman.video.vo.VideoVO;
 import com.google.common.collect.Lists;
@@ -34,8 +35,7 @@ public class VideoServiceImpl implements VideoService {
 
         videoPageRequest.setOffset((videoPageRequest.getPage() - 1) * videoPageRequest.getSize());
         Long total = videoMapper.countVideoPage(videoPageRequest);
-
-        List<VideoVO> records = Lists.newArrayList();
+        List<VideoVO> records = Lists.newArrayListWithCapacity(total.intValue());
         if (total > 0) {
             records = videoMapper.selectVideoPage(videoPageRequest);
         }

@@ -38,18 +38,27 @@
       <if test="keyword != null and keyword != ''">
         AND video.title LIKE CONCAT('%', #{keyword}, '%')
       </if>
-      AND video.is_published = 1
+      <if test="isAdmin == false">
+        AND video.is_published = 1
+      </if>
     </where>
+  </sql>
+
+  <sql id="pageColumn">
+    video.id,
+    video.category_id,
+    video.title,
+    video.description,
+    video.created_at,
+    video.is_published as status,
+    category.name as categoryName,
+    video.cover_url as cover
   </sql>
 
   <!-- 查询分页数据 -->
   <select id="selectVideoPage" resultType="com.coderman.video.vo.VideoVO">
     SELECT
-    video.id,
-    video.category_id,
-    video.title,
-    video.description,
-    video.cover_url as cover
+    <include refid="pageColumn"></include>
     FROM
     video
     left join category on video.category_id = category.id
@@ -60,11 +69,7 @@
 
   <select id="selectFirstPage" resultType="com.coderman.video.vo.VideoVO">
     SELECT
-    video.id,
-    video.category_id,
-    video.title,
-    video.description,
-    video.cover_url as cover
+    <include refid="pageColumn"></include>
     FROM
     video
     left join category on video.category_id = category.id

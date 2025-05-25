@@ -15,6 +15,20 @@ import org.springframework.security.core.userdetails.UserDetails;
  */
 public class SecurityUtils {
 
+
+    /**
+     * 判断当前用户是否为管理员
+     *
+     * @return
+     */
+    public static boolean isAdmin(){
+        LoginUser loginUser = getLoginUser();
+        if(loginUser == null){
+            return false;
+        }
+        return loginUser.isAdmin();
+    }
+
     /**
      * 获取当前用户的用户名
      */

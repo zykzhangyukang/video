@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class VideoVO extends BaseModel {
@@ -23,4 +25,13 @@ public class VideoVO extends BaseModel {
 
     @ApiModelProperty(value = "视频描述")
     private String description;
+
+    @ApiModelProperty(value = "分类")
+    private String categoryName;
+
+    @ApiModelProperty(value = "状态")
+    private Integer status;
+
+    @ApiModelProperty(value = "创建时间")
+    private Date createdAt;
 }

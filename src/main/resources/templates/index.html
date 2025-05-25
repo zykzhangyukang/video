@@ -194,7 +194,7 @@
     .video-card .video-title {
         font-weight: 600;
         font-size: 0.95rem;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
@@ -203,6 +203,25 @@
         color: var(--text-primary);
         line-height: 1.3;
         max-height: 1.3em;
+    }
+
+    .video-card .video-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .video-card .video-meta .meta-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .video-card .video-meta .el-tag {
+        margin-right: 0.25rem;
     }
 
     .video-card .video-desc {
@@ -215,7 +234,6 @@
         text-overflow: ellipsis;
         line-height: 1.4;
         max-height: 2.8em;
-        margin-top: 0.2rem;
     }
 
     /* 骨架屏优化 */
@@ -408,7 +426,7 @@
             </div>
 
             <!-- 视频列表 -->
-            <div v-for="video in videos" :key="video.id" class="video-card">
+            <div v-for="video in videos" :key="video.id" class="video-card" @click="goToVideo(video.id)">
                 <div class="image-wrapper">
                     <div v-if="!loadedImages[video.id] && !errorImages[video.id]" class="placeholder"></div>
                     <div v-if="errorImages[video.id]" class="error-placeholder">
@@ -426,6 +444,19 @@
                 <div class="video-info">
                     <div class="video-title" :title="video.title">{{ video.title }}</div>
                     <div class="video-desc" :title="video.description">{{ video.description }}</div>
+                    <!-- 仅管理员可见的meta信息 -->
+                    <div class="video-meta" v-if="isAdmin">
+                        <el-tag v-if="video.status !== undefined" size="mini"
+                                :type="video.status === 1 ? 'success' : 'info'">
+                            {{ video.status === 1 ? '已发布' : '未发布' }}
+                        </el-tag>
+                        <span class="meta-item" v-if="video.categoryName">
+                            <i class="el-icon-folder-opened"></i> {{ video.categoryName }}
+                        </span>
+                        <span class="meta-item" v-if="video.createdAt">
+                            <i class="el-icon-time"></i> {{ formatDate(video.createdAt) }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -448,6 +479,8 @@
     let videos = [[${videos}]];
     let totalVideos = [[${totalVideos}]];
     let pageSize = [[${pageSize}]];
+    let isAdmin = [[${isAdmin ? true : false}]];
+
     new Vue({
         el: '#index-wrapper',
         data: {
@@ -459,7 +492,8 @@
             totalVideos: totalVideos,
             loadedImages: {},
             errorImages: {},
-            showSearch: false
+            showSearch: false,
+            isAdmin: isAdmin
         },
         methods: {
             toggleSearch() {
@@ -524,10 +558,22 @@
             },
             onImageError(id) {
                 this.$set(this.errorImages, id, true);
+            },
+            formatDate(timestamp) {
+                if (!timestamp) return '';
+                const date = new Date(timestamp);
+                return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+            },
+            goToVideo(id) {
+                window.location.href = `/detail/${id}`;
             }
         },
         mounted() {
-            // this.loadVideos();
+            // 初始化图片加载状态
+            this.videos.forEach(video => {
+                this.$set(this.loadedImages, video.id, false);
+                this.$set(this.errorImages, video.id, false);
+            });
         }
     });
 </script>

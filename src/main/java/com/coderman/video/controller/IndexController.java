@@ -4,6 +4,7 @@ import com.coderman.video.constant.CommonConstant;
 import com.coderman.video.request.VideoPageRequest;
 import com.coderman.video.service.CategoryService;
 import com.coderman.video.service.VideoService;
+import com.coderman.video.utils.SecurityUtils;
 import com.coderman.video.vo.CategoryVO;
 import com.coderman.video.vo.VideoVO;
 import com.google.common.collect.Lists;
@@ -39,7 +40,7 @@ public class IndexController {
         // 列表首屏
         Long totalVideos = this.videoService.selectFirstCount(videoPageRequest);
         List<VideoVO> videos = Lists.newArrayListWithCapacity(totalVideos.intValue());
-        if(totalVideos > 0){
+        if (totalVideos > 0) {
             videos = this.videoService.selectFirstPage(videoPageRequest);
         }
 
@@ -48,6 +49,7 @@ public class IndexController {
         model.addAttribute("totalVideos", totalVideos);
         model.addAttribute("pageSize", CommonConstant.VIDEO_PAGE_SIZE);
         model.addAttribute("activeName", StringUtils.defaultString(videoPageRequest.getName(), "all"));
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         return "index";
     }
 
