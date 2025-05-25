@@ -48,7 +48,8 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public List<VideoVO> selectFirstPage() {
-        return videoMapper.selectFirstPage(PAGE_SIZE);
+    public List<VideoVO> selectFirstPage(VideoPageRequest videoPageRequest) {
+        videoPageRequest.setSize(PAGE_SIZE);
+        return videoMapper.selectFirstPage(videoPageRequest);
     }
 }

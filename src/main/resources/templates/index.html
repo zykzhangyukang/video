@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{layouts/main}">
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{layouts/main}">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title layout:fragment="title">测试首页</title>
+    <title layout:fragment="title">视频首页</title>
 </head>
 
 <style layout:fragment="style">
@@ -304,7 +305,6 @@
     }
 
     @media (max-width: 768px) {
-
         .custom-tabs {
             gap: 0.75rem;
         }
@@ -346,24 +346,19 @@
             grid-template-columns: repeat(2, 1fr);
         }
     }
-
 </style>
-
 
 <!-- 内容部分 -->
 <div id="index-wrapper" v-cloak class="main-container" layout:fragment="content">
 
-    <!-- 导航部分 -->
+    <!-- 导航部分 - 使用Thymeleaf渲染 -->
     <div class="tabs-container">
         <div class="custom-tabs">
-            <div
-                    v-for="tab in tabs"
-                    :key="tab.name"
-                    :class="['tab-item', { active: activeTab === tab.id }]"
-                    @click="switchTab(tab.id)"
-            >
-                {{ tab.label }}
-            </div>
+            <a th:each="tab : ${categories}"
+                 th:class="${'tab-item' + (activeName == tab.name ? ' active' : '')}"
+                 th:text="${tab.label}"
+                 th:onclick="|location.href='@{/(name=${tab.name})}'|" >
+            </a>
         </div>
 
         <!-- 搜索图标 -->
@@ -447,13 +442,12 @@
     </div>
 
 </div>
+
 <script layout:fragment="script" th:inline="javascript">
-    let tabs = [[${categories}]];
     new Vue({
         el: '#index-wrapper',
         data: {
-            activeTab: 0,
-            tabs: tabs,
+            activeName: [[${activeName ?: 'all'}]],
             videos: [],
             loading: false,
             searchKeyword: '',
@@ -465,12 +459,6 @@
             showSearch: false
         },
         methods: {
-            switchTab(id) {
-                if (this.activeTab === id) return;
-                this.activeTab = id;
-                this.currentPage = 1;
-                this.loadVideos();
-            },
             toggleSearch() {
                 this.showSearch = !this.showSearch;
                 if (this.showSearch) {
@@ -501,7 +489,7 @@
                 this.errorImages = {};
 
                 const params = {
-                    categoryId: this.activeTab,
+                    categoryId: this.activeName,
                     keyword: this.searchKeyword,
                     page: this.currentPage,
                     size: this.pageSize
@@ -533,9 +521,8 @@
             }
         },
         mounted() {
-            this.loadVideos();
+            // this.loadVideos();
         }
     });
 </script>
-
 </html>

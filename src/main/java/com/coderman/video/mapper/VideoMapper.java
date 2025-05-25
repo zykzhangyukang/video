@@ -18,6 +18,6 @@ public interface VideoMapper extends BaseMapper<Video> {
 
     Long countVideoPage(VideoPageRequest req);
 
-    List<VideoVO> selectFirstPage(Integer size);
+    List<VideoVO> selectFirstPage(VideoPageRequest req);
 
 }

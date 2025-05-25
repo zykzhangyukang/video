@@ -24,6 +24,8 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public Object handleException(HttpServletRequest request, Exception ex) {
 
+        log.error("error url:{}",request.getRequestURL());
+
         if (RequestUtils.isAjax(request)) {
             if (ex instanceof AccessDeniedException) {
                 log.error("api权限异常：{}",ex.getMessage(), ex);

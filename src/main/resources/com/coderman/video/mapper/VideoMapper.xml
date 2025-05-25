@@ -25,41 +25,44 @@
 
   <sql id="pageWhere">
     <where>
-      <if test="categoryId != null and categoryId > 0">
-        AND category_id = #{categoryId}
+      <if test="name != null and name !=''">
+        AND category.name = #{name}
       </if>
       <if test="keyword != null and keyword != ''">
-        AND title LIKE CONCAT('%', #{keyword}, '%')
+        AND video.title LIKE CONCAT('%', #{keyword}, '%')
       </if>
-      AND is_published = 1
+      AND video.is_published = 1
     </where>
   </sql>
 
   <!-- 查询分页数据 -->
   <select id="selectVideoPage" resultType="com.coderman.video.vo.VideoVO">
     SELECT
-    id,
-    category_id,
-    title,
-    description,
-    cover_url as cover
+    video.id,
+    video.category_id,
+    video.title,
+    video.description,
+    video.cover_url as cover
     FROM
     video
+    left join category on video.category_id = category.id
     <include refid="pageWhere"/>
-    ORDER BY created_at DESC
+    ORDER BY video.created_at DESC
     LIMIT #{size} OFFSET #{offset}
   </select>
 
   <select id="selectFirstPage" resultType="com.coderman.video.vo.VideoVO">
     SELECT
-    id,
-    category_id,
-    title,
-    description,
-    cover_url as cover
+    video.id,
+    video.category_id,
+    video.title,
+    video.description,
+    video.cover_url as cover
     FROM
     video
-    ORDER BY created_at DESC
+    left join category on video.category_id = category.id
+    <include refid="pageWhere"/>
+    ORDER BY video.created_at DESC
     LIMIT #{size}
   </select>
 
@@ -67,6 +70,7 @@
   <select id="countVideoPage" resultType="long">
     SELECT COUNT(1)
     FROM video
+    left join category on video.category_id = category.id
     <include refid="pageWhere"/>
   </select>
 

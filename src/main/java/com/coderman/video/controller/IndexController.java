@@ -1,5 +1,6 @@
 package com.coderman.video.controller;
 
+import com.coderman.video.request.VideoPageRequest;
 import com.coderman.video.service.CategoryService;
 import com.coderman.video.service.VideoService;
 import com.coderman.video.vo.CategoryVO;
@@ -27,15 +28,17 @@ public class IndexController {
 
     @ApiOperation(value = "首页路由", notes = "首页路由")
     @GetMapping(value = {"/"})
-    public String indexPage(Model model) {
-        // 取所有视频分类
+    public String indexPage(Model model, VideoPageRequest videoPageRequest) {
+
+        // 视频分类
         List<CategoryVO> videoCategories = this.categoryService.selectAllCategory();
 
-        // 视频默认第一页
-        List<VideoVO> videos = this.videoService.selectFirstPage();
+        // 列表首屏
+        List<VideoVO> videos = this.videoService.selectFirstPage(videoPageRequest);
 
         model.addAttribute("categories", videoCategories);
         model.addAttribute("videos", videos);
+        model.addAttribute("activeName",videoPageRequest.getName());
 
         return "index";
     }

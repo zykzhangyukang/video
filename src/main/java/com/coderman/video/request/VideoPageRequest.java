@@ -15,8 +15,8 @@ public class VideoPageRequest {
     @ApiModelProperty(value = "分页偏移量")
     private Integer offset;
 
-    @ApiModelProperty(value = "分类id")
-    private Long categoryId;
+    @ApiModelProperty(value = "分类")
+    private String name;
 
     @ApiModelProperty(value = "关键词")
     private String keyword;
