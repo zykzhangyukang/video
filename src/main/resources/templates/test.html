@@ -9,60 +9,69 @@
 <h3>请选择文件：</h3>
 <input id="file" type="file">
 
-<p>进度：<span id="progress">0%</span></p>
-<p>最终文件 hash：<span id="hash">-</span></p>
-
 <script>
     const fileInput = document.getElementById('file');
-    const progressSpan = document.getElementById('progress');
-    const hashSpan = document.getElementById('hash');
 
-    const chunkSize = 1024 * 1024;
-    const worker = new Worker('/libs/worker.js');
 
-    let totalChunks = 0;
-    let receivedChunks = 0;
+    async function cutFile(file) {
+        const CHUNK_SIZE = 1024 * 1024;
+        return new Promise(resolve => {
+            const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
+            const threadChunkCount = Math.ceil(chunkCount / (navigator.hardwareConcurrency || 4));
+            const result = [];
+            let finishCount = 0;
 
-    worker.onmessage = function (e) {
-        const data = e.data;
+            for (let i = 0; i < (navigator.hardwareConcurrency || 4); i++) {
+                const worker = new Worker('/libs/worker.js');
+                const start = i * threadChunkCount;
+                let end = (i + 1) * threadChunkCount;
 
-        if (data.type === 'progress') {
-            receivedChunks++;
-            const percent = Math.floor((receivedChunks / totalChunks) * 100);
-            progressSpan.textContent = percent + '%';
-        }
+                if (end > chunkCount) {
+                    end = chunkCount;
+                }
 
-        if (data.type === 'final') {
-            hashSpan.textContent = data.finalHash;
-        }
-    };
+                worker.postMessage({
+                    file,
+                    CHUNK_SIZE,
+                    startChunkIndex: start,
+                    endChunkIndex: end
+                });
 
-    fileInput.addEventListener('change', (e) => {
+                worker.onmessage = e => {
+                    for (let j = start; j < end; j++) {
+                        result[j] = e.data[j - start];
+                    }
+                    worker.terminate();
+                    finishCount++;
+
+                    if (finishCount === (navigator.hardwareConcurrency || 4)) {
+                        resolve(result);
+                    }
+                };
+            }
+        });
+    }
+
+    fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        totalChunks = Math.ceil(file.size / chunkSize);
-        receivedChunks = 0;
+        console.log('开始切片...');
+        try {
+            const chunks = await cutFile(file);
+            console.log('切片完成：', chunks);
 
-        progressSpan.textContent = '0%';
-        hashSpan.textContent = '-';
-
-        worker.postMessage({ type: 'init', total: totalChunks });
-
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, file.size);
-            const chunk = file.slice(start, end);
-
-            chunk.arrayBuffer().then(buffer => {
-                if (buffer instanceof ArrayBuffer) {
-                    worker.postMessage({ type: 'chunk', index: i, buffer }, [buffer]);
-                } else {
-                    worker.postMessage({ type: 'chunk', index: i, buffer });
-                }
+            // 可选：展示切片进度或结果
+            chunks.forEach((chunk, index) => {
+                console.log(`Chunk ${index}:`, chunk);
             });
+        } catch (err) {
+            console.error('切片失败：', err);
         }
     });
+
+
+
 </script>
 
 </body>

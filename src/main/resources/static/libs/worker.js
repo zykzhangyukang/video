@@ -1,32 +1,37 @@
-importScripts('/libs/spark-md5.min.js');
+importScripts('spark-md5.min.js');
 
-let totalChunks = 0;
-let chunkHashes = [];
-let receivedChunks = 0;
-
-self.onmessage = function (e) {
-    const data = e.data;
-
-    if (data.type === 'init') {
-        totalChunks = data.total;
-        chunkHashes = new Array(totalChunks);
-        receivedChunks = 0;
+self.onmessage = async (e) => {
+    const {
+        file,
+        CHUNK_SIZE,
+        startChunkIndex: start,
+        endChunkIndex: end,
+    } = e.data;
+    const proms = []
+    for (let i = start; i < end; i++) {
+        proms.push(createChunk(file, i, CHUNK_SIZE))
     }
+    const chunks =  await Promise.all(proms)
+    self.postMessage(chunks)
+}
 
-    if (data.type === 'chunk') {
-        const { index, buffer } = data;
-
+function createChunk(file, index, chunkSize) {
+    return new Promise((resolve, reject) => {
+        const start = index * chunkSize;
+        const end = start + chunkSize;
         const spark = new SparkMD5.ArrayBuffer();
-        spark.append(buffer);
-        chunkHashes[index] = spark.end();
-        receivedChunks++;
-
-        self.postMessage({ type: 'progress', index });
-
-        if (receivedChunks === totalChunks) {
-            const fullStr = chunkHashes.join('');
-            const finalHash = SparkMD5.hash(fullStr);
-            self.postMessage({ type: 'final', finalHash });
+        const fileReader = new FileReader();
+        const blob = file.slice(start, end)
+        fileReader.onload = e => {
+            spark.append(e.target.result)
+            resolve({
+                start,
+                end,
+                index,
+                hash: spark.end(),
+                blob
+            })
         }
-    }
-};
+        fileReader.readAsArrayBuffer(blob)
+    })
+}
