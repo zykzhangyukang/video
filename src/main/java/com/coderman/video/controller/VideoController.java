@@ -7,6 +7,7 @@ import com.coderman.video.utils.ResultUtil;
 import com.coderman.video.vo.CategoryVO;
 import com.coderman.video.vo.ResultVO;
 import com.google.common.collect.Maps;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,16 +39,31 @@ public class VideoController {
         return "publish";
     }
 
+    @ApiModelProperty(value = "分配上传任务id")
     @PostMapping(value = "/api/upload/init")
     @ResponseBody
     public ResultVO<Map<String, Object>> uploadInit() {
         Map<String, Object> result = Maps.newHashMap();
         result.put("uploadId", UUID.randomUUID());
         result.put("isSkip", false);
-        result.put("startPart", 1);
+        result.put("partIndex", 0);
         result.put("filePath", "");
 
         return ResultUtil.getSuccessMap(Map.class, result);
+    }
+
+    @ApiModelProperty(value = "上传分片")
+    @PostMapping(value = "/api/upload/part")
+    @ResponseBody
+    public ResultVO<Void> uploadPart() {
+        return ResultUtil.getSuccess();
+    }
+
+    @ApiModelProperty(value = "分片合并")
+    @PostMapping(value = "/api/upload/merge")
+    @ResponseBody
+    public ResultVO<Void> uploadMerge() {
+        return ResultUtil.getSuccess();
     }
 
     @PostMapping(value = "/api/videos")
