@@ -9,12 +9,13 @@
 <h3>请选择文件：</h3>
 <input id="file" type="file">
 
+<script th:src="@{/libs/spark-md5.min.js}"></script>
+<script th:src="@{/libs/axios.min.js}"></script>
 <script>
     const fileInput = document.getElementById('file');
-
+    const CHUNK_SIZE = 1024 * 1024;
 
     async function cutFile(file) {
-        const CHUNK_SIZE = 1024 * 1024;
         return new Promise(resolve => {
             const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
             const threadChunkCount = Math.ceil(chunkCount / (navigator.hardwareConcurrency || 4));
@@ -52,25 +53,49 @@
         });
     }
 
+    async function computeFileHash(chunkList){
+        const spark = new SparkMD5();
+        for (let chunk of chunkList) {
+            spark.append(chunk.hash);
+        }
+        return spark.end();
+    }
+
+    async function _getUploadId(file, fileHash, totalParts) {
+        try {
+            const response = await axios.post('/api/upload/init', {
+                fileName: file.name,
+                fileSize: file.size,
+                fileHash,
+                totalParts
+            });
+            return response.data;
+        } catch (error) {
+            console.error('请求 uploadId 失败：', error);
+            throw error;
+        }
+    }
+
+
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        console.log('开始切片...');
         try {
             const chunks = await cutFile(file);
-            console.log('切片完成：', chunks);
+            let fileHash = await this.computeFileHash(chunks);
+            const {result: { uploadId, startPart, isSkip, filePath }} = await this._getUploadId(file, fileHash, chunks.length);
 
-            // 可选：展示切片进度或结果
-            chunks.forEach((chunk, index) => {
-                console.log(`Chunk ${index}:`, chunk);
-            });
+            chunks.for(item=>{
+
+                // 一片一片上传
+
+            })
+
         } catch (err) {
             console.error('切片失败：', err);
         }
     });
-
-
 
 </script>
 
