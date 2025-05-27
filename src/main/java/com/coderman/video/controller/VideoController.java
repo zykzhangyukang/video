@@ -33,7 +33,6 @@ public class VideoController {
     @ApiOperation(value = "视频发布页面", notes = "视频发布页面")
     @GetMapping(value = {"/publish"})
     public String videoPublishPage(Model model) {
-        // 视频分类
         List<CategoryVO> videoCategories = this.categoryService.selectAllCategory();
         model.addAttribute("categories", videoCategories);
         return "publish";
