@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>极简 Hash + 进度</title>
@@ -76,6 +76,19 @@
         }
     }
 
+    async function checkFileExist(fileHash, fileSize) {
+        try {
+            const response = await axios.post('/api/upload/check', {
+                fileHash,
+                fileSize
+            });
+            return response.data;
+        } catch (error) {
+            console.error('检查文件失败：', error);
+            throw error;
+        }
+    }
+
     async function uploadPart(uploadId, index, chunk, file, fileHash) {
         const formData = new FormData();
         formData.append("uploadId", uploadId);
@@ -99,17 +112,25 @@
         if (!file) return;
 
         try {
+
+            // 1. 计算文件分片和hash
             const chunks = await cutFile(file);
             const fileHash = await computeFileHash(chunks);
-            const { result: { uploadId, partIndex, isSkip, filePath } } = await _getUploadId(file, fileHash, chunks.length);
 
-            if (isSkip) {
-                alert('该文件已秒传成功，文件路径：' + filePath);
+            // 2. 检查文件是否已存在（秒传）
+            let {result: {isFastUpload , filePath, nextPartIndex, uploadId} } = await checkFileExist(fileHash, file.size);
+            if (isFastUpload) {
+                console.log(`文件已存在，秒传成功！文件路径：${filePath}`);
                 return;
             }
 
+            if(!uploadId){
+                const { result } = await _getUploadId(file, fileHash, chunks.length);
+                uploadId = result || '';
+            }
+
             // 上传每一块（支持断点续传）
-            for (let i = partIndex; i < chunks.length; i++) {
+            for (let i = nextPartIndex; i < chunks.length; i++) {
                 console.log(`开始上传分片 ${i}...`);
                 await uploadPart(uploadId, i, chunks[i], file, fileHash);
                 console.log(`分片 ${i} 上传完成`);

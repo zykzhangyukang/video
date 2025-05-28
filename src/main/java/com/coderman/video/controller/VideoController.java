@@ -1,5 +1,6 @@
 package com.coderman.video.controller;
 
+import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
 import com.coderman.video.request.UploadPartRequest;
 import com.coderman.video.request.VideoPageRequest;
@@ -9,6 +10,7 @@ import com.coderman.video.service.VideoService;
 import com.coderman.video.utils.ResultUtil;
 import com.coderman.video.vo.CategoryVO;
 import com.coderman.video.vo.ResultVO;
+import com.coderman.video.vo.UploadCheckVO;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
@@ -39,6 +41,14 @@ public class VideoController {
         List<CategoryVO> videoCategories = this.categoryService.selectAllCategory();
         model.addAttribute("categories", videoCategories);
         return "publish";
+    }
+
+    @ApiModelProperty(value = "分配上传任务id")
+    @PostMapping(value = "/api/upload/check")
+    @ResponseBody
+    public ResultVO<UploadCheckVO> uploadCheck(@RequestBody UploadCheckRequest request) {
+        UploadCheckVO uploadCheck = this.uploadService.uploadCheck(request);
+        return ResultUtil.getSuccess(UploadCheckVO.class, uploadCheck);
     }
 
     @ApiModelProperty(value = "分配上传任务id")

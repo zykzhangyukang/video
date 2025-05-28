@@ -51,4 +51,7 @@ public class UploadTask implements Serializable {
 
     @ApiModelProperty(value = "最后更新时间")
     private Date updatedAt;
+
+    @ApiModelProperty(value = "用户id")
+    private Long userId;
 }

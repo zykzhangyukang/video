@@ -1,13 +1,16 @@
 package com.coderman.video.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.coderman.video.enums.UploadStatusEnum;
 import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.UploadTask;
+import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
 import com.coderman.video.request.UploadPartRequest;
 import com.coderman.video.service.UploadService;
 import com.coderman.video.utils.FileUtils;
+import com.coderman.video.utils.SecurityUtils;
+import com.coderman.video.vo.UploadCheckVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,7 +22,6 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -66,6 +68,7 @@ public class UploadServiceImpl implements UploadService {
         newTask.setTotalParts(totalParts);
         newTask.setPartIndex(0);
         newTask.setStatus(0);
+        newTask.setUserId(SecurityUtils.getUserId());
         this.uploadTaskMapper.insert(newTask);
         return uploadId;
     }
@@ -106,13 +109,62 @@ public class UploadServiceImpl implements UploadService {
         // 4. 更新数据
         int rowCount = this.uploadTaskMapper.update(null,
                 Wrappers.<UploadTask>lambdaUpdate()
-                        .set(UploadTask::getPartIndex, partIndex)
+                        .setSql("status = " + UploadStatusEnum.UPLOADING.getCode())
                         .setSql("part_index = part_index + 1")
                         .eq(UploadTask::getUploadId, uploadId)
         );
         if(rowCount > 0){
             log.info("保存分片成功: uploadId={}, partIndex={}, path={}", uploadId, partIndex, partFile.getAbsolutePath());
         }
+    }
+
+    @Override
+    public UploadCheckVO uploadCheck(UploadCheckRequest request) {
+
+        String fileHash = request.getFileHash();
+        Long fileSize = request.getFileSize();
+
+        Assert.hasText(fileHash, "文件Hash不能为空");
+        Assert.notNull(fileSize, "文件大小不能为空");
+
+        // 查找已经上传完成的文件（状态 = 3）
+        UploadTask exist = uploadTaskMapper.selectOne(
+                Wrappers.<UploadTask>lambdaQuery()
+                        .eq(UploadTask::getFileHash, fileHash)
+                        .eq(UploadTask::getStatus, UploadStatusEnum.MERGED.getCode())
+                        .eq(UploadTask::getFileSize, fileSize)
+                        .orderByDesc(UploadTask::getId)
+                        .last("limit 1")
+        );
+
+        UploadCheckVO resp = new UploadCheckVO(false , "", "", 0);
+        if (exist != null) {
+            resp.setIsFastUpload(true);
+            resp.setFilePath(exist.getFilePath());
+            return resp;
+        }
+
+        // 2. 检查是否有未完成的上传任务
+        UploadTask unfinishedTask = uploadTaskMapper.selectOne(
+                Wrappers.<UploadTask>lambdaQuery()
+                        .eq(UploadTask::getFileHash, fileHash)
+                        .eq(UploadTask::getFileSize, fileSize)
+                        .eq(UploadTask::getUserId, SecurityUtils.getUserId())
+                        .in(UploadTask::getStatus,
+                                UploadStatusEnum.INIT.getCode(),
+                                UploadStatusEnum.UPLOADING.getCode())
+                        .orderByDesc(UploadTask::getId)
+                        .last("limit 1")
+        );
+        if(unfinishedTask !=null){
+            resp.setIsFastUpload(false);
+            resp.setUploadId(unfinishedTask.getUploadId());
+            resp.setNextPartIndex(unfinishedTask.getPartIndex() + 1);
+            return resp;
+        }
+
+        return resp;
+
     }
 
 }
