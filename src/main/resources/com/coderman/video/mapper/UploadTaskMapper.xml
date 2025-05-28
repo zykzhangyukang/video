@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coderman.video.mapper.UploadTaskMapper">
+  <resultMap id="BaseResultMap" type="com.coderman.video.model.UploadTask">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="upload_id" jdbcType="VARCHAR" property="uploadId" />
+    <result column="file_hash" jdbcType="CHAR" property="fileHash" />
+    <result column="file_name" jdbcType="VARCHAR" property="fileName" />
+    <result column="file_size" jdbcType="BIGINT" property="fileSize" />
+    <result column="file_type" jdbcType="VARCHAR" property="fileType" />
+    <result column="file_path" jdbcType="VARCHAR" property="filePath" />
+    <result column="total_parts" jdbcType="INTEGER" property="totalParts" />
+    <result column="part_index" jdbcType="INTEGER" property="partIndex" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
+    <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, upload_id, file_hash, file_name, file_size, file_type, file_path, total_parts, 
+    part_index, status, created_at, updated_at
+  </sql>
+</mapper>
