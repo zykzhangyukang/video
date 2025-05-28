@@ -1,9 +1,6 @@
 package com.coderman.video.controller;
 
-import com.coderman.video.request.UploadCheckRequest;
-import com.coderman.video.request.UploadInitRequest;
-import com.coderman.video.request.UploadPartRequest;
-import com.coderman.video.request.VideoPageRequest;
+import com.coderman.video.request.*;
 import com.coderman.video.service.CategoryService;
 import com.coderman.video.service.UploadService;
 import com.coderman.video.service.VideoService;
@@ -70,7 +67,8 @@ public class VideoController {
     @ApiModelProperty(value = "分片合并")
     @PostMapping(value = "/api/upload/merge")
     @ResponseBody
-    public ResultVO<Void> uploadMerge() {
+    public ResultVO<Void> uploadMerge(@RequestBody UploadMergeRequest uploadMergeRequest) throws IOException {
+        this.uploadService.uploadMerge(uploadMergeRequest);
         return ResultUtil.getSuccess();
     }
 

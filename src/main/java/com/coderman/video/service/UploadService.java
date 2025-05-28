@@ -2,6 +2,7 @@ package com.coderman.video.service;
 
 import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
+import com.coderman.video.request.UploadMergeRequest;
 import com.coderman.video.request.UploadPartRequest;
 import com.coderman.video.vo.UploadCheckVO;
 
@@ -25,4 +26,10 @@ public interface UploadService {
      * @return
      */
     UploadCheckVO uploadCheck(UploadCheckRequest request);
+
+    /**
+     * 文件合并
+     * @param uploadMergeRequest 请求参数
+     */
+    void uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException;
 }

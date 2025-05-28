@@ -6,6 +6,7 @@ import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.UploadTask;
 import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
+import com.coderman.video.request.UploadMergeRequest;
 import com.coderman.video.request.UploadPartRequest;
 import com.coderman.video.service.UploadService;
 import com.coderman.video.utils.FileUtils;
@@ -20,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -165,6 +168,78 @@ public class UploadServiceImpl implements UploadService {
 
         return resp;
 
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, timeout = 30)
+    public void uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException {
+
+        String uploadId = uploadMergeRequest.getUploadId();
+
+        // 1. 参数校验
+        Assert.hasText(uploadId, "上传任务ID不能为空");
+
+        // 2. 获取上传任务信息
+        UploadTask uploadTask = uploadTaskMapper.selectOne(
+                Wrappers.<UploadTask>lambdaQuery()
+                        .eq(UploadTask::getUploadId, uploadId)
+                        .eq(UploadTask::getUserId, SecurityUtils.getUserId())
+        );
+
+        if (uploadTask == null) {
+            throw new IllegalArgumentException("上传任务不存在或不属于当前用户");
+        }
+
+        // 3. 检查是否所有分片已上传完成
+        if (uploadTask.getPartIndex() < uploadTask.getTotalParts()) {
+            throw new IllegalStateException("还有分片未上传完成，无法合并");
+        }
+
+        // 4. 准备文件路径
+        String baseDir = Paths.get(baseUploadPath, "videos", uploadId).toString();
+        String finalFilePath = Paths.get(baseUploadPath, uploadTask.getFilePath()).toString();
+
+        // 创建最终文件的父目录
+        File finalFile = new File(finalFilePath);
+        File parentDir = finalFile.getParentFile();
+        if (!parentDir.exists() && !parentDir.mkdirs()) {
+            throw new IOException("创建最终文件目录失败：" + parentDir.getAbsolutePath());
+        }
+
+        // 5. 合并文件
+        try (FileOutputStream fos = new FileOutputStream(finalFile, true)) {
+            for (int i = 1; i <= uploadTask.getTotalParts(); i++) {
+                File partFile = new File(baseDir, i + ".part");
+                if (!partFile.exists()) {
+                    throw new IOException("分片文件缺失: " + partFile.getAbsolutePath());
+                }
+
+                try (FileInputStream fis = new FileInputStream(partFile)) {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        fos.write(buffer, 0, bytesRead);
+                    }
+                }
+
+                // 删除已合并的分片文件
+                if (!partFile.delete()) {
+                    log.warn("删除分片文件失败: {}", partFile.getAbsolutePath());
+                }
+            }
+        }
+
+        // 6. 删除临时目录
+        File tempDir = new File(baseDir);
+        if (tempDir.exists() && !tempDir.delete()) {
+            log.warn("删除临时目录失败: {}", tempDir.getAbsolutePath());
+        }
+
+        // 7. 更新任务状态为已完成
+        uploadTask.setStatus(UploadStatusEnum.MERGED.getCode());
+        uploadTaskMapper.updateById(uploadTask);
+
+        log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
     }
 
 }
