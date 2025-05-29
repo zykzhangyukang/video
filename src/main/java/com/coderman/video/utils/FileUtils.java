@@ -115,14 +115,14 @@ public class FileUtils {
         }
     }
 
-    public static String calHash(List<String> hashs) {
-        if (hashs == null || hashs.isEmpty()) {
+    public static String calHash(List<String> hashList) {
+        if (hashList == null || hashList.isEmpty()) {
             throw new IllegalArgumentException("hash 列表不能为空");
         }
         try {
             // 拼接所有 hash 字符串
             StringBuilder sb = new StringBuilder();
-            for (String h : hashs) {
+            for (String h : hashList) {
                 if (h == null || h.trim().isEmpty()) {
                     throw new IllegalArgumentException("hash 列表中存在空值");
                 }
@@ -141,13 +141,6 @@ public class FileUtils {
         } catch (Exception e) {
             throw new RuntimeException("计算聚合 hash 失败", e);
         }
-    }
-
-    // 测试主方法
-    public static void main(String[] args) {
-        String fileName = "example.png";
-        System.out.println("FileType: " + getFileType(fileName));
-        System.out.println("FilePath: " + genFilePath(fileName, FileModuleEnum.USER_MODULE));
     }
 }
 
