@@ -232,15 +232,6 @@ public class UploadServiceImpl implements UploadService {
             }
         }
 
-        String hashValue = FileUtils.calHash(hashList);
-        if(!StringUtils.equals(hashValue , uploadTask.getFileHash())){
-            UploadTask update = new UploadTask();
-            update.setId(uploadTask.getId());
-            update.setStatus(UploadStatusEnum.FAILED.getCode());
-            uploadTaskMapper.updateById(update);
-            throw new IllegalStateException("文件丢失上传失败");
-        }
-
         // 6. 删除所有分片文件
         boolean allDeleted = true;
         for (File partFile : partFiles) {
@@ -263,7 +254,17 @@ public class UploadServiceImpl implements UploadService {
             }
         }
 
-        // 8. 更新任务状态为已完成
+        // 8. 校验文件完整性
+        String hashValue = FileUtils.calHash(hashList);
+        if(!StringUtils.equals(hashValue , uploadTask.getFileHash())){
+            UploadTask update = new UploadTask();
+            update.setId(uploadTask.getId());
+            update.setStatus(UploadStatusEnum.FAILED.getCode());
+            uploadTaskMapper.updateById(update);
+            throw new IllegalStateException("文件丢失上传失败");
+        }
+
+        // 9. 更新任务状态为已完成
         UploadTask update = new UploadTask();
         update.setId(uploadTask.getId());
         update.setStatus(UploadStatusEnum.MERGED.getCode());
