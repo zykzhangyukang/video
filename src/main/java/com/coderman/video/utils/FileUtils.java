@@ -22,7 +22,7 @@ import java.util.*;
 
 public class FileUtils {
 
-    private static final String dir = "data";
+    public static final String dir = "uploads";
 
     public enum FileModuleEnum {
         COMMON_MODULE("common"),

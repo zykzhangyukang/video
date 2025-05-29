@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.coderman.video.config.UploadConfig;
 import com.coderman.video.enums.UploadStatusEnum;
 import com.coderman.video.mapper.UploadTaskMapper;
+import com.coderman.video.model.SysFile;
 import com.coderman.video.model.UploadTask;
 import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
 import com.coderman.video.request.UploadMergeRequest;
 import com.coderman.video.request.UploadPartRequest;
+import com.coderman.video.service.SysFileService;
 import com.coderman.video.service.UploadService;
 import com.coderman.video.utils.FileUtils;
 import com.coderman.video.utils.SecurityUtils;
@@ -26,10 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -42,9 +41,10 @@ public class UploadServiceImpl implements UploadService {
 
     @Resource
     private UploadTaskMapper uploadTaskMapper;
-
     @Resource
     private UploadConfig uploadConfig;
+    @Resource
+    private SysFileService sysFileService;
 
     @Override
     public String uploadInit(UploadInitRequest request) {
@@ -114,13 +114,12 @@ public class UploadServiceImpl implements UploadService {
         file.transferTo(partFile);
 
         // 4. 更新数据
-        int rowCount = this.uploadTaskMapper.update(null,
-                Wrappers.<UploadTask>lambdaUpdate()
+        int rowCount = this.uploadTaskMapper.update(null, Wrappers.<UploadTask>lambdaUpdate()
                         .setSql("status = " + UploadStatusEnum.UPLOADING.getCode())
                         .setSql("part_index = part_index + 1")
                         .eq(UploadTask::getUploadId, uploadId)
         );
-        if(rowCount > 0){
+        if (rowCount > 0) {
             log.info("保存分片成功: uploadId={}, partIndex={}, path={}", uploadId, partIndex, partFile.getAbsolutePath());
         }
     }
@@ -135,19 +134,11 @@ public class UploadServiceImpl implements UploadService {
         Assert.notNull(fileSize, "文件大小不能为空");
 
         // 查找已经上传完成的文件（状态 = 3）
-        UploadTask exist = uploadTaskMapper.selectOne(
-                Wrappers.<UploadTask>lambdaQuery()
-                        .eq(UploadTask::getFileHash, fileHash)
-                        .eq(UploadTask::getStatus, UploadStatusEnum.MERGED.getCode())
-                        .eq(UploadTask::getFileSize, fileSize)
-                        .orderByDesc(UploadTask::getId)
-                        .last("limit 1")
-        );
-
-        UploadCheckVO resp = new UploadCheckVO(false , "", "", 0);
-        if (exist != null) {
+        SysFile sysFile = this.sysFileService.selectByHash(fileHash);
+        UploadCheckVO resp = new UploadCheckVO(false, "", "", 0);
+        if (sysFile != null) {
             resp.setIsFastUpload(true);
-            resp.setFilePath(exist.getFilePath());
+            resp.setFileUrl(sysFile.getFileUrl());
             return resp;
         }
 
@@ -163,7 +154,7 @@ public class UploadServiceImpl implements UploadService {
                         .orderByDesc(UploadTask::getId)
                         .last("limit 1")
         );
-        if(unfinishedTask !=null){
+        if (unfinishedTask != null) {
             resp.setIsFastUpload(false);
             resp.setUploadId(unfinishedTask.getUploadId());
             resp.setNextPartIndex(unfinishedTask.getPartIndex() + 1);
@@ -179,6 +170,7 @@ public class UploadServiceImpl implements UploadService {
 
         String uploadId = uploadMergeRequest.getUploadId();
         String baseUploadPath = uploadConfig.getBaseUploadPath();
+        String localDomain = uploadConfig.getLocalDomain();
 
         // 1. 参数校验
         Assert.hasText(uploadId, "上传任务ID不能为空");
@@ -258,7 +250,7 @@ public class UploadServiceImpl implements UploadService {
 
         // 8. 校验文件完整性
         String hashValue = FileUtils.calHash(hashList);
-        if(!StringUtils.equals(hashValue , uploadTask.getFileHash())){
+        if (!StringUtils.equals(hashValue, uploadTask.getFileHash())) {
             UploadTask update = new UploadTask();
             update.setId(uploadTask.getId());
             update.setStatus(UploadStatusEnum.FAILED.getCode());
@@ -272,7 +264,23 @@ public class UploadServiceImpl implements UploadService {
         update.setStatus(UploadStatusEnum.MERGED.getCode());
         uploadTaskMapper.updateById(update);
         log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
-        return uploadTask.getFilePath();
+
+        // 写入文件表
+        SysFile file = this.sysFileService.selectByHash(uploadTask.getFileHash());
+        if (file == null) {
+            file = new SysFile();
+            file.setFileHash(uploadTask.getFileHash());
+            file.setFileName(uploadTask.getFileName());
+            file.setFileType(uploadTask.getFileType());
+            file.setFileSize(uploadTask.getFileSize());
+            file.setFileUrl(localDomain + "/" + uploadTask.getFilePath());
+            file.setStorageType("local");
+            file.setStatus(1);
+            file.setCreatedAt(new Date());
+            file.setUpdatedAt(new Date());
+            this.sysFileService.save(file);
+        }
+        return file.getFileUrl();
     }
 
 

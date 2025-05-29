@@ -19,4 +19,10 @@ public class UploadConfig {
 
     @ApiModelProperty(value = "过期文件清除")
     private long expireMinutes;
+
+    @ApiModelProperty(value = "本地文件域名")
+    private String localDomain;
+
+    @ApiModelProperty(value = "oss文件域名")
+    private String ossDomain;
 }

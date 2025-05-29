@@ -14,9 +14,10 @@
     <result column="status" jdbcType="TINYINT" property="status" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
+    <result column="user_id" jdbcType="BIGINT" property="userId" />
   </resultMap>
   <sql id="Base_Column_List">
     id, upload_id, file_hash, file_name, file_size, file_type, file_path, total_parts, 
-    part_index, status, created_at, updated_at
+    part_index, status, created_at, updated_at, user_id
   </sql>
 </mapper>

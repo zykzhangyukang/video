@@ -15,3 +15,4 @@ logging:
 upload:
   base-upload-path: F:\\files
   expire-minutes: 60
+  local-domain: http://localhost:8787
