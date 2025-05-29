@@ -21,7 +21,7 @@ import java.util.Optional;
 
 public class FileUtils {
 
-    private static final String applicationName = "video";
+    private static final String dir = "data";
 
     public enum FileModuleEnum {
         COMMON_MODULE("common"),
@@ -92,7 +92,7 @@ public class FileUtils {
         } else {
             newFileName = second + "_" + URLEncoder.encode(originalFilename, StandardCharsets.UTF_8.name());
         }
-        return String.format("%s/%s/%s/%s/%s", applicationName, fileModuleEnum.getCode(), day, fileType, newFileName);
+        return String.format("%s/%s/%s/%s/%s", dir, fileModuleEnum.getCode(), day, fileType, newFileName);
     }
 
     // 测试主方法
