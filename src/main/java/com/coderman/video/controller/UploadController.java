@@ -31,7 +31,7 @@ public class UploadController {
     @PostMapping(value = "/api/upload/check")
     @ResponseBody
     public ResultVO<UploadCheckVO> uploadCheck(@RequestBody UploadCheckRequest request) {
-        UploadCheckVO uploadCheck = this.uploadService.uploadCheck(request);
+        UploadCheckVO uploadCheck = this.uploadService.checkUpload(request);
         return ResultUtil.getSuccess(UploadCheckVO.class, uploadCheck);
     }
 
@@ -39,7 +39,7 @@ public class UploadController {
     @PostMapping(value = "/api/upload/init")
     @ResponseBody
     public ResultVO<String> uploadInit(@RequestBody UploadInitRequest request) {
-        String uploadId = this.uploadService.uploadInit(request);
+        String uploadId = this.uploadService.initUpload(request);
         return ResultUtil.getSuccess(String.class, uploadId);
     }
 
@@ -55,7 +55,7 @@ public class UploadController {
     @PostMapping(value = "/api/upload/merge")
     @ResponseBody
     public ResultVO<String> uploadMerge(@RequestBody UploadMergeRequest uploadMergeRequest) throws IOException {
-        String src = this.uploadService.uploadMerge(uploadMergeRequest);
+        String src = this.uploadService.mergeUpload(uploadMergeRequest);
         return ResultUtil.getSuccess(String.class, src);
     }
 }

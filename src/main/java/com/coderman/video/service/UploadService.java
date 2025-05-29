@@ -10,26 +10,35 @@ import java.io.IOException;
 
 public interface UploadService {
     /**
-     * 初始化分片上传任务
-     * @param request 请求参数
-     * @return
+     * 检查上传任务是否已存在（用于秒传、断点续传判断）。
+     *
+     * @param request 上传检查请求，包含 fileHash、fileName 等信息
+     * @return UploadCheckVO 返回是否需要上传、已上传分片等信息
      */
-    String uploadInit(UploadInitRequest request);
-    /**
-     * 分片上传
-     * @param uploadPartRequest 请求参数
-     */
-    void uploadPart(UploadPartRequest uploadPartRequest) throws IOException;
-    /**
-     * 秒传接口
-     * @param request 请求参数
-     * @return
-     */
-    UploadCheckVO uploadCheck(UploadCheckRequest request);
+    UploadCheckVO checkUpload(UploadCheckRequest request);
 
     /**
-     * 文件合并
-     * @param uploadMergeRequest 请求参数
+     * 初始化上传任务，生成并返回 uploadId，用于后续分片上传标识。
+     *
+     * @param request 上传初始化请求，包含 fileHash、fileName、总大小等参数
+     * @return String 返回上传任务 ID（uploadId）
      */
-    String uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException;
+    String initUpload(UploadInitRequest request);
+
+    /**
+     * 上传单个分片数据。
+     *
+     * @param request 上传分片请求，包含 uploadId、分片索引、分片数据等
+     * @throws IOException 分片写入过程中可能发生的 IO 异常
+     */
+    void uploadPart(UploadPartRequest request) throws IOException;
+
+    /**
+     * 合并所有已上传分片，生成最终完整文件。
+     *
+     * @param request 合并请求，包含 uploadId、分片数量、目标路径等
+     * @return String 返回最终生成文件的 URL 或本地路径
+     * @throws IOException 合并过程中可能发生的 IO 异常
+     */
+    String mergeUpload(UploadMergeRequest request) throws IOException;
 }

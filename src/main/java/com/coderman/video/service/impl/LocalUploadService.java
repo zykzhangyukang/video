@@ -18,6 +18,7 @@ import com.coderman.video.vo.UploadCheckVO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,9 +36,9 @@ import java.util.stream.Collectors;
  * @author ：zhangyukang
  * @date ：2025/05/28 15:45
  */
-@Service
 @Slf4j
-public class UploadServiceImpl implements UploadService {
+@Component("localUploadService")
+public class LocalUploadService implements UploadService {
 
     @Resource
     private UploadTaskMapper uploadTaskMapper;
@@ -47,7 +48,7 @@ public class UploadServiceImpl implements UploadService {
     private SysFileService sysFileService;
 
     @Override
-    public String uploadInit(UploadInitRequest request) {
+    public String initUpload(UploadInitRequest request) {
 
         String fileHash = request.getFileHash();
         String fileName = request.getFileName();
@@ -125,7 +126,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    public UploadCheckVO uploadCheck(UploadCheckRequest request) {
+    public UploadCheckVO checkUpload(UploadCheckRequest request) {
 
         String fileHash = request.getFileHash();
         Long fileSize = request.getFileSize();
@@ -166,7 +167,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    public String uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException {
+    public String mergeUpload(UploadMergeRequest uploadMergeRequest) throws IOException {
 
         String uploadId = uploadMergeRequest.getUploadId();
         String baseUploadPath = uploadConfig.getBaseUploadPath();
