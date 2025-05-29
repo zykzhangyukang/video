@@ -67,9 +67,9 @@ public class VideoController {
     @ApiModelProperty(value = "分片合并")
     @PostMapping(value = "/api/upload/merge")
     @ResponseBody
-    public ResultVO<Void> uploadMerge(@RequestBody UploadMergeRequest uploadMergeRequest) throws IOException {
-        this.uploadService.uploadMerge(uploadMergeRequest);
-        return ResultUtil.getSuccess();
+    public ResultVO<String> uploadMerge(@RequestBody UploadMergeRequest uploadMergeRequest) throws IOException {
+        String src = this.uploadService.uploadMerge(uploadMergeRequest);
+        return ResultUtil.getSuccess(String.class, src);
     }
 
     @PostMapping(value = "/api/videos")

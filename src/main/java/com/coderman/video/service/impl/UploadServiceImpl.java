@@ -1,6 +1,7 @@
 package com.coderman.video.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.coderman.video.config.UploadConfig;
 import com.coderman.video.enums.UploadStatusEnum;
 import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.UploadTask;
@@ -15,7 +16,6 @@ import com.coderman.video.vo.UploadCheckVO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,8 +43,8 @@ public class UploadServiceImpl implements UploadService {
     @Resource
     private UploadTaskMapper uploadTaskMapper;
 
-    @Value("${upload.base-dir:F:\\files}")
-    private String baseUploadPath;
+    @Resource
+    private UploadConfig uploadConfig;
 
     @Override
     public String uploadInit(UploadInitRequest request) {
@@ -88,6 +88,7 @@ public class UploadServiceImpl implements UploadService {
         String uploadId = uploadPartRequest.getUploadId();
         String fileName = uploadPartRequest.getFileName();
         Integer partIndex = uploadPartRequest.getPartIndex();
+        String baseUploadPath = uploadConfig.getBaseUploadPath();
 
         // 1. 参数校验
         Assert.notNull(file, "分片文件不能为空");
@@ -174,9 +175,10 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    public void uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException {
+    public String uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException {
 
         String uploadId = uploadMergeRequest.getUploadId();
+        String baseUploadPath = uploadConfig.getBaseUploadPath();
 
         // 1. 参数校验
         Assert.hasText(uploadId, "上传任务ID不能为空");
@@ -270,6 +272,7 @@ public class UploadServiceImpl implements UploadService {
         update.setStatus(UploadStatusEnum.MERGED.getCode());
         uploadTaskMapper.updateById(update);
         log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
+        return uploadTask.getFilePath();
     }
 
 

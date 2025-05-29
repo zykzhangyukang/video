@@ -31,5 +31,5 @@ public interface UploadService {
      * 文件合并
      * @param uploadMergeRequest 请求参数
      */
-    void uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException;
+    String uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException;
 }
