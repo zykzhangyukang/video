@@ -6,13 +6,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.util.Assert;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author ：zhangyukang
@@ -95,10 +96,56 @@ public class FileUtils {
         return String.format("%s/%s/%s/%s/%s", dir, fileModuleEnum.getCode(), day, fileType, newFileName);
     }
 
+    public static String computeMD5(File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                md.update(buffer, 0, bytesRead);
+            }
+            byte[] digest = md.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b & 0xff));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new IOException("计算文件MD5失败", e);
+        }
+    }
+
+    public static String calHash(List<String> hashs) {
+        if (hashs == null || hashs.isEmpty()) {
+            throw new IllegalArgumentException("hash 列表不能为空");
+        }
+        try {
+            // 拼接所有 hash 字符串
+            StringBuilder sb = new StringBuilder();
+            for (String h : hashs) {
+                if (h == null || h.trim().isEmpty()) {
+                    throw new IllegalArgumentException("hash 列表中存在空值");
+                }
+                sb.append(h.trim());
+            }
+            // 计算拼接后字符串的 MD5
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
+            // 转成十六进制字符串
+            StringBuilder result = new StringBuilder();
+            for (byte b : digest) {
+                result.append(String.format("%02x", b & 0xff));
+            }
+
+            return result.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("计算聚合 hash 失败", e);
+        }
+    }
+
     // 测试主方法
     public static void main(String[] args) {
         String fileName = "example.png";
-
         System.out.println("FileType: " + getFileType(fileName));
         System.out.println("FilePath: " + genFilePath(fileName, FileModuleEnum.USER_MODULE));
     }

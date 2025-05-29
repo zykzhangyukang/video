@@ -12,10 +12,11 @@ import com.coderman.video.service.UploadService;
 import com.coderman.video.utils.FileUtils;
 import com.coderman.video.utils.SecurityUtils;
 import com.coderman.video.vo.UploadCheckVO;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,7 +47,6 @@ public class UploadServiceImpl implements UploadService {
     private String baseUploadPath;
 
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 5)
     public String uploadInit(UploadInitRequest request) {
 
         String fileHash = request.getFileHash();
@@ -82,7 +82,6 @@ public class UploadServiceImpl implements UploadService {
 
 
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 10)
     public void uploadPart(UploadPartRequest uploadPartRequest) throws IOException {
         MultipartFile file = uploadPartRequest.getFile();
         String fileHash = uploadPartRequest.getFileHash();
@@ -175,7 +174,6 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 120)
     public void uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException {
 
         String uploadId = uploadMergeRequest.getUploadId();
@@ -219,6 +217,7 @@ public class UploadServiceImpl implements UploadService {
         List<File> partFiles = Arrays.stream(partFileArray)
                 .sorted(Comparator.comparingInt(f -> Integer.parseInt(f.getName().replace(".part", ""))))
                 .collect(Collectors.toList());
+        List<String> hashList = Lists.newArrayList();
         try (FileOutputStream fos = new FileOutputStream(finalFile, true)) {
             for (File partFile : partFiles) {
                 try (FileInputStream fis = new FileInputStream(partFile)) {
@@ -228,7 +227,18 @@ public class UploadServiceImpl implements UploadService {
                         fos.write(buffer, 0, bytesRead);
                     }
                 }
+                String hash = FileUtils.computeMD5(partFile);
+                hashList.add(hash);
             }
+        }
+
+        String hashValue = FileUtils.calHash(hashList);
+        if(!StringUtils.equals(hashValue , uploadTask.getFileHash())){
+            UploadTask update = new UploadTask();
+            update.setId(uploadTask.getId());
+            update.setStatus(UploadStatusEnum.FAILED.getCode());
+            uploadTaskMapper.updateById(update);
+            throw new IllegalStateException("文件丢失上传失败");
         }
 
         // 6. 删除所有分片文件
