@@ -25,7 +25,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author ：zhangyukang
@@ -38,7 +42,7 @@ public class UploadServiceImpl implements UploadService {
     @Resource
     private UploadTaskMapper uploadTaskMapper;
 
-    @Value("${upload.base-dir:F:}")
+    @Value("${upload.base-dir:F:\\files}")
     private String baseUploadPath;
 
     @Override
@@ -66,7 +70,7 @@ public class UploadServiceImpl implements UploadService {
         newTask.setFileHash(fileHash);
         newTask.setFileName(fileName);
         newTask.setFileType(FileUtils.getFileType(fileName));
-        newTask.setFilePath(FileUtils.genFilePath(fileName, FileUtils.FileModuleEnum.COMMON_MODULE, fileHash));
+        newTask.setFilePath(FileUtils.genFilePath(fileName, FileUtils.FileModuleEnum.COMMON_MODULE));
         newTask.setFileSize(fileSize);
         newTask.setTotalParts(totalParts);
         newTask.setPartIndex(0);
@@ -94,7 +98,7 @@ public class UploadServiceImpl implements UploadService {
         Assert.notNull(partIndex, "分片索引不能为空");
 
         // 2. 构建保存路径
-        String baseDir = Paths.get(baseUploadPath, "videos", uploadId).toString();
+        String baseDir = Paths.get(baseUploadPath, "tmp", uploadId).toString();
         File dir = new File(baseDir);
         if (!dir.exists() && !dir.mkdirs()) {
             throw new IOException("创建上传目录失败：" + baseDir);
@@ -171,7 +175,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 30)
+    @Transactional(rollbackFor = Exception.class, timeout = 120)
     public void uploadMerge(UploadMergeRequest uploadMergeRequest) throws IOException {
 
         String uploadId = uploadMergeRequest.getUploadId();
@@ -196,24 +200,27 @@ public class UploadServiceImpl implements UploadService {
         }
 
         // 4. 准备文件路径
-        String baseDir = Paths.get(baseUploadPath, "videos", uploadId).toString();
+        String baseDir = Paths.get(baseUploadPath, "tmp", uploadId).toString();
         String finalFilePath = Paths.get(baseUploadPath, uploadTask.getFilePath()).toString();
 
-        // 创建最终文件的父目录
         File finalFile = new File(finalFilePath);
         File parentDir = finalFile.getParentFile();
         if (!parentDir.exists() && !parentDir.mkdirs()) {
             throw new IOException("创建最终文件目录失败：" + parentDir.getAbsolutePath());
         }
 
-        // 5. 合并文件
-        try (FileOutputStream fos = new FileOutputStream(finalFile, true)) {
-            for (int i = 1; i <= uploadTask.getTotalParts(); i++) {
-                File partFile = new File(baseDir, i + ".part");
-                if (!partFile.exists()) {
-                    throw new IOException("分片文件缺失: " + partFile.getAbsolutePath());
-                }
+        // 5. 合并分片文件
+        File[] partFileArray = new File(baseDir).listFiles((dir, name) -> name.endsWith(".part"));
+        if (partFileArray == null || partFileArray.length != uploadTask.getTotalParts()) {
+            throw new IOException("分片文件数量不匹配");
+        }
 
+        // 按照文件名中的数字部分排序（无论是0开始还是1开始都能合并）
+        List<File> partFiles = Arrays.stream(partFileArray)
+                .sorted(Comparator.comparingInt(f -> Integer.parseInt(f.getName().replace(".part", ""))))
+                .collect(Collectors.toList());
+        try (FileOutputStream fos = new FileOutputStream(finalFile, true)) {
+            for (File partFile : partFiles) {
                 try (FileInputStream fis = new FileInputStream(partFile)) {
                     byte[] buffer = new byte[8192];
                     int bytesRead;
@@ -221,25 +228,38 @@ public class UploadServiceImpl implements UploadService {
                         fos.write(buffer, 0, bytesRead);
                     }
                 }
-
-                // 删除已合并的分片文件
-                if (!partFile.delete()) {
-                    log.warn("删除分片文件失败: {}", partFile.getAbsolutePath());
-                }
             }
         }
 
-        // 6. 删除临时目录
-        File tempDir = new File(baseDir);
-        if (tempDir.exists() && !tempDir.delete()) {
-            log.warn("删除临时目录失败: {}", tempDir.getAbsolutePath());
+        // 6. 删除所有分片文件
+        boolean allDeleted = true;
+        for (File partFile : partFiles) {
+            if (!partFile.delete()) {
+                allDeleted = false;
+                log.warn("删除分片文件失败: {}", partFile.getAbsolutePath());
+            }
         }
 
-        // 7. 更新任务状态为已完成
-        uploadTask.setStatus(UploadStatusEnum.MERGED.getCode());
-        uploadTaskMapper.updateById(uploadTask);
+        // 7. 如果所有分片删除成功，尝试删除分片目录
+        File tempDir = new File(baseDir);
+        if (allDeleted && tempDir.exists()) {
+            File[] remainingFiles = tempDir.listFiles();
+            if (remainingFiles != null && remainingFiles.length == 0) {
+                if (!tempDir.delete()) {
+                    log.warn("删除临时目录失败: {}", tempDir.getAbsolutePath());
+                }
+            } else {
+                log.warn("临时目录不为空，跳过删除: {}", tempDir.getAbsolutePath());
+            }
+        }
 
+        // 8. 更新任务状态为已完成
+        UploadTask update = new UploadTask();
+        update.setId(uploadTask.getId());
+        update.setStatus(UploadStatusEnum.MERGED.getCode());
+        uploadTaskMapper.updateById(update);
         log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
     }
+
 
 }

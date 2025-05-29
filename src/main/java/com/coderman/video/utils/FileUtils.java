@@ -1,12 +1,18 @@
 package com.coderman.video.utils;
 
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.util.Assert;
 
-import java.text.SimpleDateFormat;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author ：zhangyukang
@@ -63,33 +69,38 @@ public class FileUtils {
      *
      * @param originalFilename 源文件名，带后缀
      * @param fileModuleEnum   业务模块枚举
-     * @param fileHash         文件hash，用于命名唯一标识
      * @return 结构化路径字符串
      */
-    public static String genFilePath(String originalFilename, FileModuleEnum fileModuleEnum, String fileHash) {
-        fileModuleEnum = fileModuleEnum == null ? FileModuleEnum.COMMON_MODULE : fileModuleEnum;
+    @SneakyThrows
+    public static String genFilePath(String originalFilename, FileModuleEnum fileModuleEnum) {
+
+        fileModuleEnum = Optional.ofNullable(fileModuleEnum).orElse(FileModuleEnum.COMMON_MODULE);
         Assert.isTrue(StringUtils.isNotBlank(originalFilename), "文件原始名称不能为空!!");
 
         int index = originalFilename.lastIndexOf(".");
         Assert.isTrue(index > 0, String.format("根据文件名%s获取文件类型失败!!", originalFilename));
 
-        String fileType = originalFilename.substring(index + 1).toLowerCase();
+        // 文件类型
+        String fileType = originalFilename.substring(index + 1);
         Assert.isTrue(StringUtils.isNotBlank(fileType), String.format("根据文件名%s获取文件类型失败!!", originalFilename));
 
-        String yearMonth = new SimpleDateFormat("yyyy/MM").format(new Date());
-
-        String newFileName = fileHash + "." + fileType;
-
-        return String.format("%s/%s/%s/%s", applicationName, fileModuleEnum.getCode(), yearMonth, newFileName);
+        Integer second = (int) Instant.now().getEpochSecond();
+        String day = DateFormatUtils.format(new Date(), "yyyy-MM-dd");
+        String newFileName;
+        if (isImage(fileType)) {
+            newFileName = second + "_" + RandomStringUtils.randomAlphanumeric(4) + "." + fileType;
+        } else {
+            newFileName = second + "_" + URLEncoder.encode(originalFilename, StandardCharsets.UTF_8.name());
+        }
+        return String.format("%s/%s/%s/%s/%s", applicationName, fileModuleEnum.getCode(), day, fileType, newFileName);
     }
 
     // 测试主方法
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         String fileName = "example.png";
-        String fileHash = "d41d8cd98f00b204e9800998ecf8427e";
 
         System.out.println("FileType: " + getFileType(fileName));
-        System.out.println("FilePath: " + genFilePath(fileName, FileModuleEnum.USER_MODULE, fileHash));
+        System.out.println("FilePath: " + genFilePath(fileName, FileModuleEnum.USER_MODULE));
     }
 }
 
