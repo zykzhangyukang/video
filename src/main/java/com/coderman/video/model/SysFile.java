@@ -34,6 +34,9 @@ public class SysFile implements Serializable {
     @ApiModelProperty(value = "文件访问路径")
     private String fileUrl;
 
+    @ApiModelProperty(value = "文件路径")
+    private String filePath;
+
     @ApiModelProperty(value = "存储类型（local/oss/minio）")
     private String storageType;
 

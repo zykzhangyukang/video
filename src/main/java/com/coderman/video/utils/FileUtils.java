@@ -9,11 +9,12 @@ import org.springframework.util.Assert;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author ：zhangyukang
@@ -34,30 +35,11 @@ public class FileUtils {
         public String getCode() { return code; }
     }
 
-    private static final Map<String, String> MIME_MAP = new HashMap<>();
-    static {
-        MIME_MAP.put("jpg", "image/jpeg");
-        MIME_MAP.put("jpeg", "image/jpeg");
-        MIME_MAP.put("png", "image/png");
-        MIME_MAP.put("gif", "image/gif");
-        MIME_MAP.put("mp4", "video/mp4");
-        MIME_MAP.put("mp3", "audio/mpeg");
-        MIME_MAP.put("pdf", "application/pdf");
-        MIME_MAP.put("doc", "application/msword");
-        MIME_MAP.put("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        MIME_MAP.put("xls", "application/vnd.ms-excel");
-        MIME_MAP.put("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        MIME_MAP.put("zip", "application/zip");
-        MIME_MAP.put("rar", "application/x-rar-compressed");
-        MIME_MAP.put("txt", "text/plain");
-    }
-
     public static String getFileType(String fileName) {
         if (fileName == null || !fileName.contains(".")) {
-            return "application/octet-stream";
+            return "";
         }
-        String ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-        return MIME_MAP.getOrDefault(ext, "application/octet-stream");
+        return fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
     }
 
     public static boolean isImage(String ext) {
@@ -91,7 +73,7 @@ public class FileUtils {
         if (isImage(fileType)) {
             newFileName = second + "_" + RandomStringUtils.randomAlphanumeric(4) + "." + fileType;
         } else {
-            newFileName = second + "_" + URLEncoder.encode(originalFilename, StandardCharsets.UTF_8.name());
+            newFileName = second + "_" + RandomStringUtils.randomAlphanumeric(5) + "." + fileType;
         }
         return String.format("%s/%s/%s/%s/%s", dir, fileModuleEnum.getCode(), day, fileType, newFileName);
     }

@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class UploadConfig {
 
-    @ApiModelProperty(value = "上传目录")
+    @ApiModelProperty(value = "本地上传目录")
     private String baseUploadPath;
 
     @ApiModelProperty(value = "过期文件清除")

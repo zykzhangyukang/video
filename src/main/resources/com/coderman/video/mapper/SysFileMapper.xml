@@ -6,6 +6,7 @@
     <result column="file_hash" jdbcType="VARCHAR" property="fileHash" />
     <result column="file_name" jdbcType="VARCHAR" property="fileName" />
     <result column="file_type" jdbcType="VARCHAR" property="fileType" />
+    <result column="file_path" jdbcType="VARCHAR" property="filePath" />
     <result column="file_size" jdbcType="BIGINT" property="fileSize" />
     <result column="file_url" jdbcType="VARCHAR" property="fileUrl" />
     <result column="storage_type" jdbcType="VARCHAR" property="storageType" />
@@ -14,7 +15,7 @@
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, file_hash, file_name, file_type, file_size, file_url, storage_type, status, created_at, 
+    id, file_hash, file_name, file_type, file_size, file_url, file_path,storage_type, status, created_at,
     updated_at
   </sql>
 </mapper>

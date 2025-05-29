@@ -274,6 +274,7 @@ public class UploadServiceImpl implements UploadService {
             file.setFileType(uploadTask.getFileType());
             file.setFileSize(uploadTask.getFileSize());
             file.setFileUrl(localDomain + "/" + uploadTask.getFilePath());
+            file.setFilePath(uploadTask.getFilePath());
             file.setStorageType("local");
             file.setStatus(1);
             file.setCreatedAt(new Date());

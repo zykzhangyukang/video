@@ -12,3 +12,7 @@ logging:
   level:
     root: info
     com.coderman.video.mapper: debug
+upload:
+  base-upload-path: /opt/files
+  expire-minutes: 60
+  local-domain: http://localhost:8787
