@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -126,13 +127,14 @@ public class LocalUploadService extends UploadService {
     }
 
     @Override
-    public String mergeUpload(UploadMergeRequest uploadMergeRequest) {
+    @Transactional(timeout = 30)
+    public String mergeUpload(UploadMergeRequest uploadMergeRequest) throws IOException{
 
         String uploadId = uploadMergeRequest.getUploadId();
         String baseUploadPath = uploadConfig.getLocal().getBaseUploadPath();
         String localDomain = uploadConfig.getLocal().getDomain();
+        UploadTask uploadTask;
 
-        UploadTask uploadTask = null;
         try {
             // 1. 参数校验
             Assert.hasText(uploadId, "上传任务ID不能为空");
@@ -224,7 +226,7 @@ public class LocalUploadService extends UploadService {
             uploadTaskMapper.updateById(update);
             log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
 
-            // 写入文件表
+            // 10. 写入文件表
             SysFile file = this.sysFileService.selectByHash(uploadTask.getFileHash());
             if (file == null) {
                 file = new SysFile();
@@ -244,15 +246,8 @@ public class LocalUploadService extends UploadService {
 
         } catch (Exception e) {
 
-            if (uploadTask != null) {
-                UploadTask update = new UploadTask();
-                update.setId(uploadTask.getId());
-                update.setStatus(UploadStatusEnum.FAILED.getCode());
-                uploadTaskMapper.updateById(update);
-            }
             log.error("上传文件失败:{}", e.getMessage(), e);
-
-            throw new VideoException("上传文件失败:" + e.getMessage());
+            throw new IOException("上传文件失败:" + e.getMessage());
         }
 
     }
