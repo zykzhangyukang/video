@@ -3,6 +3,7 @@ package com.coderman.video.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.coderman.video.config.UploadConfig;
 import com.coderman.video.enums.UploadStatusEnum;
+import com.coderman.video.exception.VideoException;
 import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.SysFile;
 import com.coderman.video.model.UploadTask;
@@ -18,6 +19,7 @@ import com.coderman.video.vo.UploadCheckVO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -116,9 +118,9 @@ public class LocalUploadService implements UploadService {
 
         // 4. 更新数据
         int rowCount = this.uploadTaskMapper.update(null, Wrappers.<UploadTask>lambdaUpdate()
-                        .setSql("status = " + UploadStatusEnum.UPLOADING.getCode())
-                        .setSql("part_index = part_index + 1")
-                        .eq(UploadTask::getUploadId, uploadId)
+                .setSql("status = " + UploadStatusEnum.UPLOADING.getCode())
+                .setSql("part_index = part_index + 1")
+                .eq(UploadTask::getUploadId, uploadId)
         );
         if (rowCount > 0) {
             log.info("保存分片成功: uploadId={}, partIndex={}, path={}", uploadId, partIndex, partFile.getAbsolutePath());
@@ -167,122 +169,135 @@ public class LocalUploadService implements UploadService {
     }
 
     @Override
-    public String mergeUpload(UploadMergeRequest uploadMergeRequest) throws IOException {
+    public String mergeUpload(UploadMergeRequest uploadMergeRequest) {
 
         String uploadId = uploadMergeRequest.getUploadId();
         String baseUploadPath = uploadConfig.getBaseUploadPath();
         String localDomain = uploadConfig.getLocalDomain();
 
-        // 1. 参数校验
-        Assert.hasText(uploadId, "上传任务ID不能为空");
+        UploadTask uploadTask = null;
+        try {
+            // 1. 参数校验
+            Assert.hasText(uploadId, "上传任务ID不能为空");
 
-        // 2. 获取上传任务信息
-        UploadTask uploadTask = uploadTaskMapper.selectOne(
-                Wrappers.<UploadTask>lambdaQuery()
-                        .eq(UploadTask::getUploadId, uploadId)
-                        .eq(UploadTask::getUserId, SecurityUtils.getUserId())
-        );
+            // 2. 获取上传任务信息
+            uploadTask = uploadTaskMapper.selectOne(
+                    Wrappers.<UploadTask>lambdaQuery()
+                            .eq(UploadTask::getUploadId, uploadId)
+                            .eq(UploadTask::getUserId, SecurityUtils.getUserId())
+            );
 
-        if (uploadTask == null) {
-            throw new IllegalArgumentException("上传任务不存在或不属于当前用户");
-        }
+            if (uploadTask == null) {
+                throw new IllegalArgumentException("上传任务不存在或不属于当前用户");
+            }
 
-        // 3. 检查是否所有分片已上传完成
-        if (uploadTask.getPartIndex() < uploadTask.getTotalParts()) {
-            throw new IllegalStateException("还有分片未上传完成，无法合并");
-        }
+            // 3. 检查是否所有分片已上传完成
+            if (uploadTask.getPartIndex() < uploadTask.getTotalParts()) {
+                throw new IllegalStateException("还有分片未上传完成，无法合并");
+            }
 
-        // 4. 准备文件路径
-        String baseDir = Paths.get(baseUploadPath, "tmp", uploadId).toString();
-        String finalFilePath = Paths.get(baseUploadPath, uploadTask.getFilePath()).toString();
+            // 4. 准备文件路径
+            String baseDir = Paths.get(baseUploadPath, "tmp", uploadId).toString();
+            String finalFilePath = Paths.get(baseUploadPath, uploadTask.getFilePath()).toString();
 
-        File finalFile = new File(finalFilePath);
-        File parentDir = finalFile.getParentFile();
-        if (!parentDir.exists() && !parentDir.mkdirs()) {
-            throw new IOException("创建最终文件目录失败：" + parentDir.getAbsolutePath());
-        }
+            File finalFile = new File(finalFilePath);
+            File parentDir = finalFile.getParentFile();
+            if (!parentDir.exists() && !parentDir.mkdirs()) {
+                throw new IOException("创建最终文件目录失败：" + parentDir.getAbsolutePath());
+            }
 
-        // 5. 合并分片文件
-        File[] partFileArray = new File(baseDir).listFiles((dir, name) -> name.endsWith(".part"));
-        if (partFileArray == null || partFileArray.length != uploadTask.getTotalParts()) {
-            throw new IOException("分片文件数量不匹配");
-        }
+            // 5. 合并分片文件
+            File[] partFileArray = new File(baseDir).listFiles((dir, name) -> name.endsWith(".part"));
+            if (partFileArray == null || partFileArray.length != uploadTask.getTotalParts()) {
+                throw new IOException("分片文件数量不匹配");
+            }
 
-        // 按照文件名中的数字部分排序（无论是0开始还是1开始都能合并）
-        List<File> partFiles = Arrays.stream(partFileArray)
-                .sorted(Comparator.comparingInt(f -> Integer.parseInt(f.getName().replace(".part", ""))))
-                .collect(Collectors.toList());
-        List<String> hashList = Lists.newArrayList();
-        try (FileOutputStream fos = new FileOutputStream(finalFile, true)) {
-            for (File partFile : partFiles) {
-                try (FileInputStream fis = new FileInputStream(partFile)) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = fis.read(buffer)) != -1) {
-                        fos.write(buffer, 0, bytesRead);
+            // 按照文件名中的数字部分排序（无论是0开始还是1开始都能合并）
+            List<File> partFiles = Arrays.stream(partFileArray)
+                    .sorted(Comparator.comparingInt(f -> Integer.parseInt(f.getName().replace(".part", ""))))
+                    .collect(Collectors.toList());
+            List<String> hashList = Lists.newArrayList();
+            try (FileOutputStream fos = new FileOutputStream(finalFile, true)) {
+                for (File partFile : partFiles) {
+                    try (FileInputStream fis = new FileInputStream(partFile)) {
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        while ((bytesRead = fis.read(buffer)) != -1) {
+                            fos.write(buffer, 0, bytesRead);
+                        }
                     }
+                    String hash = FileUtils.computeMD5(partFile);
+                    hashList.add(hash);
                 }
-                String hash = FileUtils.computeMD5(partFile);
-                hashList.add(hash);
             }
-        }
 
-        // 6. 删除所有分片文件
-        boolean allDeleted = true;
-        for (File partFile : partFiles) {
-            if (!partFile.delete()) {
-                allDeleted = false;
-                log.warn("删除分片文件失败: {}", partFile.getAbsolutePath());
-            }
-        }
-
-        // 7. 如果所有分片删除成功，尝试删除分片目录
-        File tempDir = new File(baseDir);
-        if (allDeleted && tempDir.exists()) {
-            File[] remainingFiles = tempDir.listFiles();
-            if (remainingFiles != null && remainingFiles.length == 0) {
-                if (!tempDir.delete()) {
-                    log.warn("删除临时目录失败: {}", tempDir.getAbsolutePath());
+            // 6. 删除所有分片文件
+            boolean allDeleted = true;
+            for (File partFile : partFiles) {
+                if (!partFile.delete()) {
+                    allDeleted = false;
+                    log.warn("删除分片文件失败: {}", partFile.getAbsolutePath());
                 }
-            } else {
-                log.warn("临时目录不为空，跳过删除: {}", tempDir.getAbsolutePath());
             }
-        }
 
-        // 8. 校验文件完整性
-        String hashValue = FileUtils.calHash(hashList);
-        if (!StringUtils.equals(hashValue, uploadTask.getFileHash())) {
+            // 7. 如果所有分片删除成功，尝试删除分片目录
+            File tempDir = new File(baseDir);
+            if (allDeleted && tempDir.exists()) {
+                File[] remainingFiles = tempDir.listFiles();
+                if (remainingFiles != null && remainingFiles.length == 0) {
+                    if (!tempDir.delete()) {
+                        log.warn("删除临时目录失败: {}", tempDir.getAbsolutePath());
+                    }
+                } else {
+                    log.warn("临时目录不为空，跳过删除: {}", tempDir.getAbsolutePath());
+                }
+            }
+
+            // 8. 校验文件完整性
+            String hashValue = FileUtils.calHash(hashList);
+            if (!StringUtils.equals(hashValue, uploadTask.getFileHash())) {
+                throw new IllegalStateException("文件丢失上传失败");
+            }
+
+
+            // 9. 更新任务状态为已完成
             UploadTask update = new UploadTask();
             update.setId(uploadTask.getId());
-            update.setStatus(UploadStatusEnum.FAILED.getCode());
+            update.setStatus(UploadStatusEnum.MERGED.getCode());
             uploadTaskMapper.updateById(update);
-            throw new IllegalStateException("文件丢失上传失败");
+            log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
+
+            // 写入文件表
+            SysFile file = this.sysFileService.selectByHash(uploadTask.getFileHash());
+            if (file == null) {
+                file = new SysFile();
+                file.setFileHash(uploadTask.getFileHash());
+                file.setFileName(uploadTask.getFileName());
+                file.setFileType(uploadTask.getFileType());
+                file.setFileSize(uploadTask.getFileSize());
+                file.setFileUrl(localDomain + "/" + uploadTask.getFilePath());
+                file.setFilePath(uploadTask.getFilePath());
+                file.setStorageType("local");
+                file.setStatus(1);
+                file.setCreatedAt(new Date());
+                file.setUpdatedAt(new Date());
+                this.sysFileService.save(file);
+            }
+            return file.getFileUrl();
+
+        } catch (Exception e) {
+
+            if (uploadTask != null) {
+                UploadTask update = new UploadTask();
+                update.setId(uploadTask.getId());
+                update.setStatus(UploadStatusEnum.FAILED.getCode());
+                uploadTaskMapper.updateById(update);
+            }
+            log.error("上传文件失败:{}", e.getMessage(), e);
+
+            throw new VideoException("上传文件失败:" + e.getMessage());
         }
 
-        // 9. 更新任务状态为已完成
-        UploadTask update = new UploadTask();
-        update.setId(uploadTask.getId());
-        update.setStatus(UploadStatusEnum.MERGED.getCode());
-        uploadTaskMapper.updateById(update);
-        log.info("文件合并成功: uploadId={}, filePath={}", uploadId, finalFilePath);
-
-        // 写入文件表
-        SysFile file = this.sysFileService.selectByHash(uploadTask.getFileHash());
-        if (file == null) {
-            file = new SysFile();
-            file.setFileHash(uploadTask.getFileHash());
-            file.setFileName(uploadTask.getFileName());
-            file.setFileType(uploadTask.getFileType());
-            file.setFileSize(uploadTask.getFileSize());
-            file.setFileUrl(localDomain + "/" + uploadTask.getFilePath());
-            file.setFilePath(uploadTask.getFilePath());
-            file.setStorageType("local");
-            file.setStatus(1);
-            file.setCreatedAt(new Date());
-            file.setUpdatedAt(new Date());
-            this.sysFileService.save(file);
-        }
-        return file.getFileUrl();
     }
 
 

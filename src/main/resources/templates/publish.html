@@ -436,6 +436,60 @@
             triggerCoverInput() {
                 this.$refs.coverInput.click();
             },
+            // 合并分片
+            async mergeFile(uploadId, fileName) {
+                return axios.post('/api/upload/merge', {
+                    uploadId,
+                    fileName
+                });
+            },
+            // 上传分片
+            async uploadPart(uploadId, index, chunk, file, fileHash) {
+                const formData = new FormData();
+                formData.append("uploadId", uploadId);
+                formData.append("partIndex", index);
+                formData.append("file", chunk.blob);
+                formData.append("fileName", file.name);
+                formData.append("fileHash", fileHash);
+
+                return axios.post('/api/upload/part', formData);
+            },
+            // 初始化上传任务
+            async _getUploadId(file, fileHash, totalParts) {
+                try {
+                    const response = await axios.post('/api/upload/init', {
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileHash,
+                        totalParts
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.error('请求 uploadId 失败：', error);
+                    throw error;
+                }
+            },
+            // 检查是否上传过
+            async checkFileExist(fileHash, fileSize) {
+                try {
+                    const response = await axios.post('/api/upload/check', {
+                        fileHash,
+                        fileSize
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.error('检查文件失败：', error);
+                    throw error;
+                }
+            },
+            // 计算文件整体hash
+            async computeFileHash(chunkList) {
+                const spark = new SparkMD5();
+                for (let chunk of chunkList) {
+                    spark.append(chunk.hash);
+                }
+                return spark.end();
+            },
             // 文件分片
             async cutFile(file) {
                 return new Promise(resolve => {
@@ -487,12 +541,37 @@
                     return;
                 }
 
-                const chunks = await this.cutFile(file);
+                try {
+
+                    const chunks = await this.cutFile(file);
+                    const fileHash = await this.computeFileHash(chunks);
+                    let {result: {isFastUpload, fileUrl, nextPartIndex, uploadId}} = await this.checkFileExist(fileHash, file.size);
+                    if (isFastUpload) {
+                        this.$message.success(`文件已存在，秒传成功！文件路径`);
+                        this.videoPreviewUrl = fileUrl;
+                        return;
+                    }
+                    if (!uploadId) {
+                        const {result} = await this._getUploadId(file, fileHash, chunks.length);
+                        uploadId = result || '';
+                    }
+
+                    for (let i = nextPartIndex; i < chunks.length; i++) {
+                        await this.uploadPart(uploadId, i, chunks[i], file, fileHash);
+                        this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
+                    }
+
+                    await this.mergeFile(uploadId, file.name);
+
+                } catch (error) {
+                    console.log(error)
+                    this.$message.error('上传过程出错:' + error)
+                }
 
                 this.videoFile = file;
                 this.videoPreviewUrl = URL.createObjectURL(file);
                 this.videoUploadStatus = null;
-                this.uploadVideo();
+                //this.uploadVideo();
             },
 
             // 处理封面图选择
