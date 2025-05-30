@@ -438,10 +438,16 @@
             },
             // 合并分片
             async mergeFile(uploadId, fileName) {
-                return axios.post('/api/upload/merge', {
-                    uploadId,
-                    fileName
-                });
+                try {
+                    const response = await axios.post('/api/upload/merge', {
+                        uploadId,
+                        fileName
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.error('文件合并 失败：', error);
+                    throw error;
+                }
             },
             // 上传分片
             async uploadPart(uploadId, index, chunk, file, fileHash) {
@@ -541,37 +547,10 @@
                     return;
                 }
 
-                try {
-
-                    const chunks = await this.cutFile(file);
-                    const fileHash = await this.computeFileHash(chunks);
-                    let {result: {isFastUpload, fileUrl, nextPartIndex, uploadId}} = await this.checkFileExist(fileHash, file.size);
-                    if (isFastUpload) {
-                        this.$message.success(`文件已存在，秒传成功！文件路径`);
-                        this.videoPreviewUrl = fileUrl;
-                        return;
-                    }
-                    if (!uploadId) {
-                        const {result} = await this._getUploadId(file, fileHash, chunks.length);
-                        uploadId = result || '';
-                    }
-
-                    for (let i = nextPartIndex; i < chunks.length; i++) {
-                        await this.uploadPart(uploadId, i, chunks[i], file, fileHash);
-                        this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
-                    }
-
-                    await this.mergeFile(uploadId, file.name);
-
-                } catch (error) {
-                    console.log(error)
-                    this.$message.error('上传过程出错:' + error)
-                }
-
                 this.videoFile = file;
                 this.videoPreviewUrl = URL.createObjectURL(file);
                 this.videoUploadStatus = null;
-                //this.uploadVideo();
+                await this.uploadVideo();
             },
 
             // 处理封面图选择
@@ -621,42 +600,39 @@
             },
 
             // 上传视频文件
-            uploadVideo() {
+            async uploadVideo() {
                 if (!this.videoFile) return;
-
+                let file = this.videoFile;
                 this.uploadingVideo = true;
                 this.videoUploadProgress = 0;
                 this.videoUploadStatus = null;
+                try {
 
-                const formData = new FormData();
-                formData.append('file', this.videoFile);
-
-                // 这里使用axios上传视频文件
-                axios.post('/api/upload/video', formData, {
-                    onUploadProgress: (progressEvent) => {
-                        if (progressEvent.lengthComputable) {
-                            this.videoUploadProgress = Math.round(
-                                (progressEvent.loaded * 100) / progressEvent.total
-                            );
-                        }
+                    const chunks = await this.cutFile(file);
+                    const fileHash = await this.computeFileHash(chunks);
+                    let {result: {isFastUpload, fileUrl, nextPartIndex, uploadId}} = await this.checkFileExist(fileHash, file.size);
+                    if (isFastUpload) {
+                        this.$message.success(`文件已存在，秒传成功！文件路径`);
+                        this.videoPreviewUrl = fileUrl;
+                        return;
                     }
-                })
-                    .then(response => {
-                        if (response.data && response.data.code === 200) {
-                            this.videoUploadStatus = 'success';
-                            this.form.videoUrl = response.data.result.url;
-                        } else {
-                            throw new Error(response.data?.message || '视频上传失败');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('视频上传失败:', error);
-                        this.videoUploadStatus = 'exception';
-                        this.$message.error(error.message || '视频上传失败');
-                    })
-                    .finally(() => {
-                        this.uploadingVideo = false;
-                    });
+                    if (!uploadId) {
+                        const {result} = await this._getUploadId(file, fileHash, chunks.length);
+                        uploadId = result || '';
+                    }
+
+                    for (let i = nextPartIndex; i < chunks.length; i++) {
+                        await this.uploadPart(uploadId, i, chunks[i], file, fileHash);
+                        this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
+                    }
+
+                    const {result} = await this.mergeFile(uploadId, file.name);
+                    console.log(result)
+
+                } catch (error) {
+                    console.log(error)
+                    this.$message.error('上传过程出错:' + error)
+                }
             },
 
             // 上传封面图
