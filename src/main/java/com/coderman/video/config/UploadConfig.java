@@ -14,15 +14,32 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class UploadConfig {
 
-    @ApiModelProperty(value = "本地上传目录")
-    private String baseUploadPath;
+    @ApiModelProperty(value = "上传策略")
+    private String strategy;
 
-    @ApiModelProperty(value = "过期文件清除")
-    private long expireMinutes;
+    @ApiModelProperty("本地上传配置")
+    private Local local = new Local();
 
-    @ApiModelProperty(value = "本地文件域名")
-    private String localDomain;
+    @ApiModelProperty("OSS上传配置")
+    private Oss oss = new Oss();
 
-    @ApiModelProperty(value = "oss文件域名")
-    private String ossDomain;
+    @Data
+    public static class Local {
+        @ApiModelProperty(value = "本地文件域名")
+        private String domain;
+        @ApiModelProperty(value = "本地上传目录")
+        private String baseUploadPath;
+        @ApiModelProperty(value = "过期文件清除")
+        private long expireMinutes;
+    }
+
+    @Data
+    public static class Oss {
+        @ApiModelProperty(value = "oss文件域名")
+        private String domain;
+        private String endpoint;
+        private String accessKeyId;
+        private String accessKeySecret;
+        private String bucketName;
+    }
 }

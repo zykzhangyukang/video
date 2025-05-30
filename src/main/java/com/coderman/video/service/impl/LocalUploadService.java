@@ -19,9 +19,8 @@ import com.coderman.video.vo.UploadCheckVO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,6 +39,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component("localUploadService")
+@ConditionalOnProperty(name = "upload.strategy", havingValue = "local")
 public class LocalUploadService implements UploadService {
 
     @Resource
@@ -91,7 +91,7 @@ public class LocalUploadService implements UploadService {
         String uploadId = uploadPartRequest.getUploadId();
         String fileName = uploadPartRequest.getFileName();
         Integer partIndex = uploadPartRequest.getPartIndex();
-        String baseUploadPath = uploadConfig.getBaseUploadPath();
+        String baseUploadPath = uploadConfig.getLocal().getBaseUploadPath();
 
         // 1. 参数校验
         Assert.notNull(file, "分片文件不能为空");
@@ -172,8 +172,8 @@ public class LocalUploadService implements UploadService {
     public String mergeUpload(UploadMergeRequest uploadMergeRequest) {
 
         String uploadId = uploadMergeRequest.getUploadId();
-        String baseUploadPath = uploadConfig.getBaseUploadPath();
-        String localDomain = uploadConfig.getLocalDomain();
+        String baseUploadPath = uploadConfig.getLocal().getBaseUploadPath();
+        String localDomain = uploadConfig.getLocal().getDomain();
 
         UploadTask uploadTask = null;
         try {
@@ -277,7 +277,7 @@ public class LocalUploadService implements UploadService {
                 file.setFileSize(uploadTask.getFileSize());
                 file.setFileUrl(localDomain + "/" + uploadTask.getFilePath());
                 file.setFilePath(uploadTask.getFilePath());
-                file.setStorageType("local");
+                file.setStorageType(uploadConfig.getStrategy());
                 file.setStatus(1);
                 file.setCreatedAt(new Date());
                 file.setUpdatedAt(new Date());

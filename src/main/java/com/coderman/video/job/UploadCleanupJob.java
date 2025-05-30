@@ -6,6 +6,7 @@ import com.coderman.video.enums.UploadStatusEnum;
 import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.UploadTask;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +17,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
+ * 本地文件清理定时器
  * @author ：zhangyukang
  * @date ：2025/05/29 14:11
  */
-@Component
 @Slf4j
+@Component
+@ConditionalOnProperty(name = "upload.strategy", havingValue = "local")
 public class UploadCleanupJob {
 
     @Resource
@@ -34,8 +37,8 @@ public class UploadCleanupJob {
     // "*/5 * * * * ?"
     @Scheduled(cron = "0 */5 * * * ?")
     public void cleanExpiredUploadTasks() {
-        long expireMinutes = uploadConfig.getExpireMinutes();
-        String baseUploadPath = uploadConfig.getBaseUploadPath();
+        long expireMinutes = uploadConfig.getLocal().getExpireMinutes();
+        String baseUploadPath = uploadConfig.getLocal().getBaseUploadPath();
         LocalDateTime expireTime = LocalDateTime.now().minusMinutes(expireMinutes);
         log.info("开始清理 {} 分钟前未完成的上传任务", expireMinutes);
 

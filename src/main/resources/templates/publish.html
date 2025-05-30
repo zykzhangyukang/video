@@ -652,10 +652,10 @@
                         this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
                     }
 
-                    const {url} = await this.mergeFile(uploadId, file.name);
-                    this.$message.success(`文件上传成功！文件路径:${url}`);
+                    const {result} = await this.mergeFile(uploadId, file.name);
+                    this.$message.success(`文件上传成功！文件路径:${result}`);
                     this.videoUploadStatus = 'success';
-                    this.form.videoUrl = url;
+                    this.form.videoUrl = result;
 
                 } catch (error) {
                     console.log(error)
