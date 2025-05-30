@@ -236,7 +236,7 @@
                     <div class="upload-subtext">{{ formatFileSize(videoFile.size) }}</div>
 
                     <div class="video-preview" v-if="videoPreviewUrl">
-                        <video :src="videoPreviewUrl" controls></video>
+                        <video :src="videoPreviewUrl" controls preload="none"></video>
                     </div>
 
                     <div class="upload-progress" v-if="uploadingVideo">
@@ -439,11 +439,15 @@
             // 合并分片
             async mergeFile(uploadId, fileName) {
                 try {
-                    const response = await axios.post('/api/upload/merge', {
+                    const res = await axios.post('/api/upload/merge', {
                         uploadId,
                         fileName
                     });
-                    return response.data;
+                    if (res.data.code === 200) {
+                        return res.data;
+                    } else {
+                        throw new Error(res.data.msg || '合并失败');
+                    }
                 } catch (error) {
                     console.error('文件合并 失败：', error);
                     throw error;
@@ -460,9 +464,9 @@
                 try {
                     const res = await axios.post('/api/upload/part', formData);
                     if (res.data.code === 200) {
-                        return res.data.data;
+                        return res.data;
                     } else {
-                        throw new Error(res.data.message || '上传失败');
+                        throw new Error(res.data.msg || '上传失败');
                     }
                 } catch (err) {
                     console.error(`分片 ${index} 上传异常：`, err);
@@ -479,9 +483,9 @@
                         totalParts
                     });
                     if (res.data.code === 200) {
-                        return res.data.data;
+                        return res.data;
                     } else {
-                        throw new Error(res.data.message || '初始化上传任务失败');
+                        throw new Error(res.data.msg || '初始化上传任务失败');
                     }
                 } catch (err) {
                     console.error('请求 uploadId 失败：', err);
@@ -496,9 +500,9 @@
                         fileSize
                     });
                     if (res.data.code === 200) {
-                        return res.data.data;  // 你关心的是否存在的标志什么的
+                        return res.data;
                     } else {
-                        throw new Error(res.data.message || '检查文件失败');
+                        throw new Error(res.data.msg || '检查文件失败');
                     }
                 } catch (error) {
                     console.error('检查文件失败：', error);
@@ -634,6 +638,7 @@
                         this.$message.success(`文件已存在，秒传成功！文件路径:${fileUrl}`);
                         this.videoUploadStatus = 'success';
                         this.form.videoUrl = fileUrl;
+                        this.videoUploadProgress = 100;
                         return;
                     }
 
@@ -651,12 +656,12 @@
                     this.$message.success(`文件上传成功！文件路径:${url}`);
                     this.videoUploadStatus = 'success';
                     this.form.videoUrl = url;
-                    this.uploadingVideo = false;
 
                 } catch (error) {
                     console.log(error)
                     this.$message.error('上传过程出错:' + error);
                     this.videoUploadStatus = 'exception';
+                    this.uploadingVideo = false;
                 }
             },
 
@@ -800,6 +805,10 @@
                 // 清除文件输入
                 this.$refs.videoInput.value = '';
                 this.$refs.coverInput.value = '';
+
+                if (this.videoPreviewUrl) {
+                    URL.revokeObjectURL(this.videoPreviewUrl);
+                }
 
                 this.$message.success('表单已重置');
             }

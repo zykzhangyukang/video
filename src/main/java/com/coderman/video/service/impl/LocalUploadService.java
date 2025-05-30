@@ -67,7 +67,7 @@ public class LocalUploadService implements UploadService {
 
         // 生成上传任务
         UploadTask newTask = new UploadTask();
-        String uploadId = UUID.randomUUID().toString().replace("-", "");
+        String uploadId = UUID.randomUUID().toString().replace("-", "").toUpperCase();
 
         newTask.setUploadId(uploadId);
         newTask.setFileHash(fileHash);
