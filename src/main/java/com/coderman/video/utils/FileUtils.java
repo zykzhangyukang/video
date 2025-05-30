@@ -56,6 +56,11 @@ public class FileUtils {
      */
     @SneakyThrows
     public static String genFilePath(String originalFilename, FileModuleEnum fileModuleEnum) {
+        return genFilePath(FileUtils.dir ,originalFilename, fileModuleEnum);
+    }
+
+    @SneakyThrows
+    public static String genFilePath(String dir, String originalFilename, FileModuleEnum fileModuleEnum) {
 
         fileModuleEnum = Optional.ofNullable(fileModuleEnum).orElse(FileModuleEnum.COMMON_MODULE);
         Assert.isTrue(StringUtils.isNotBlank(originalFilename), "文件原始名称不能为空!!");

@@ -7,7 +7,6 @@ import com.coderman.video.exception.VideoException;
 import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.SysFile;
 import com.coderman.video.model.UploadTask;
-import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
 import com.coderman.video.request.UploadMergeRequest;
 import com.coderman.video.request.UploadPartRequest;
@@ -15,7 +14,6 @@ import com.coderman.video.service.SysFileService;
 import com.coderman.video.service.UploadService;
 import com.coderman.video.utils.FileUtils;
 import com.coderman.video.utils.SecurityUtils;
-import com.coderman.video.vo.UploadCheckVO;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component("localUploadService")
 @ConditionalOnProperty(name = "upload.strategy", havingValue = "local")
-public class LocalUploadService implements UploadService {
+public class LocalUploadService extends UploadService {
 
     @Resource
     private UploadTaskMapper uploadTaskMapper;
@@ -125,47 +123,6 @@ public class LocalUploadService implements UploadService {
         if (rowCount > 0) {
             log.info("保存分片成功: uploadId={}, partIndex={}, path={}", uploadId, partIndex, partFile.getAbsolutePath());
         }
-    }
-
-    @Override
-    public UploadCheckVO checkUpload(UploadCheckRequest request) {
-
-        String fileHash = request.getFileHash();
-        Long fileSize = request.getFileSize();
-
-        Assert.hasText(fileHash, "文件Hash不能为空");
-        Assert.notNull(fileSize, "文件大小不能为空");
-
-        // 查找已经上传完成的文件（状态 = 3）
-        SysFile sysFile = this.sysFileService.selectByHash(fileHash);
-        UploadCheckVO resp = new UploadCheckVO(false, "", "", 0);
-        if (sysFile != null) {
-            resp.setIsFastUpload(true);
-            resp.setFileUrl(sysFile.getFileUrl());
-            return resp;
-        }
-
-        // 2. 检查是否有未完成的上传任务
-        UploadTask unfinishedTask = uploadTaskMapper.selectOne(
-                Wrappers.<UploadTask>lambdaQuery()
-                        .eq(UploadTask::getFileHash, fileHash)
-                        .eq(UploadTask::getFileSize, fileSize)
-                        .eq(UploadTask::getUserId, SecurityUtils.getUserId())
-                        .in(UploadTask::getStatus,
-                                UploadStatusEnum.INIT.getCode(),
-                                UploadStatusEnum.UPLOADING.getCode())
-                        .orderByDesc(UploadTask::getId)
-                        .last("limit 1")
-        );
-        if (unfinishedTask != null) {
-            resp.setIsFastUpload(false);
-            resp.setUploadId(unfinishedTask.getUploadId());
-            resp.setNextPartIndex(unfinishedTask.getPartIndex() + 1);
-            return resp;
-        }
-
-        return resp;
-
     }
 
     @Override
