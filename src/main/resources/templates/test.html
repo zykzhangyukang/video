@@ -135,7 +135,7 @@
                 await uploadPart(uploadId, i, chunks[i-1], file, fileHash);
                 console.log(`分片 ${i} 上传完成`);
 
-                const percent = Math.floor(((i + 1) / chunks.length) * 100);
+                const percent = Math.floor(((i) / chunks.length) * 100);
                 console.log(`整体上传进度: ${percent}%`);
             }
 

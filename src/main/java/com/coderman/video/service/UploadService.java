@@ -13,11 +13,12 @@ import com.coderman.video.request.UploadPartRequest;
 import com.coderman.video.utils.SecurityUtils;
 import com.coderman.video.vo.UploadCheckVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -125,10 +126,10 @@ public abstract class UploadService {
      */
     public void scheduleUploadDataCleanup() {
 
-        long expireMinutes = uploadConfig.getExpireMinutes();
+        int expireMinutes = uploadConfig.getExpireMinutes();
 
         // 计算过期时间点（当前时间减去配置的过期分钟数）
-        LocalDateTime expireTime = LocalDateTime.now().minusMinutes(expireMinutes);
+        Date expireTime = DateUtils.addMinutes(new Date(), -expireMinutes);
         log.info("开始清理 {} 分钟前未完成的上传任务", expireMinutes);
 
         // 查询超时未完成的上传任务（INIT / UPLOADING 且创建时间早于 expireTime）

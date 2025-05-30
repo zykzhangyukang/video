@@ -5,7 +5,7 @@ spring:
     cache: false
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/video?useUnicode=yes&rewriteBatchedStatements=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT%2b8
+    url: jdbc:mysql://127.0.0.1:3306/video?useUnicode=yes&rewriteBatchedStatements=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: zhangyukang
 logging:
@@ -13,6 +13,14 @@ logging:
     root: info
     com.coderman.video.mapper: debug
 upload:
-  base-upload-path: /opt/files
+  strategy: oss
   expire-minutes: 60
-  local-domain: http://localhost:8787
+  local:
+    base-upload-path: F:\\files
+    domain: http://localhost:8787
+  oss:
+    domain: https://image.coderman.club
+    endpoint: oss-cn-shenzhen.aliyuncs.com
+    access-key-id: DES@15BF54A5AE211A5CF9D33FBC5F1DC0BBCBB930C2BCC7C3875F2EC4A83FE5B5FD
+    access-key-secret: DES@C198710CB2463E594B6599BE0ABE138AAC0735B5ABBD632655095EBE8F436582
+    bucket-name: ioss-bucket

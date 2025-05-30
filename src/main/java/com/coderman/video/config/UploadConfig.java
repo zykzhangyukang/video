@@ -18,7 +18,7 @@ public class UploadConfig {
     private String strategy;
 
     @ApiModelProperty(value = "过期文件清除")
-    private long expireMinutes;
+    private int expireMinutes;
 
     @ApiModelProperty("本地上传配置")
     private Local local = new Local();

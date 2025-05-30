@@ -649,7 +649,7 @@
 
                     for (let i = nextPartNumber; i <= chunks.length; i++) {
                         await this.uploadPart(uploadId, i, chunks[i-1], file, fileHash);
-                        this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
+                        this.videoUploadProgress = Math.floor((i / chunks.length) * 100);
                     }
 
                     const {result} = await this.mergeFile(uploadId, file.name);
