@@ -457,32 +457,49 @@
                 formData.append("file", chunk.blob);
                 formData.append("fileName", file.name);
                 formData.append("fileHash", fileHash);
-
-                return axios.post('/api/upload/part', formData);
+                try {
+                    const res = await axios.post('/api/upload/part', formData);
+                    if (res.data.code === 200) {
+                        return res.data.data;
+                    } else {
+                        throw new Error(res.data.message || '上传失败');
+                    }
+                } catch (err) {
+                    console.error(`分片 ${index} 上传异常：`, err);
+                    throw err;
+                }
             },
             // 初始化上传任务
             async _getUploadId(file, fileHash, totalParts) {
                 try {
-                    const response = await axios.post('/api/upload/init', {
+                    const res = await axios.post('/api/upload/init', {
                         fileName: file.name,
                         fileSize: file.size,
                         fileHash,
                         totalParts
                     });
-                    return response.data;
-                } catch (error) {
-                    console.error('请求 uploadId 失败：', error);
-                    throw error;
+                    if (res.data.code === 200) {
+                        return res.data.data;
+                    } else {
+                        throw new Error(res.data.message || '初始化上传任务失败');
+                    }
+                } catch (err) {
+                    console.error('请求 uploadId 失败：', err);
+                    throw err;
                 }
             },
             // 检查是否上传过
             async checkFileExist(fileHash, fileSize) {
                 try {
-                    const response = await axios.post('/api/upload/check', {
+                    const res = await axios.post('/api/upload/check', {
                         fileHash,
                         fileSize
                     });
-                    return response.data;
+                    if (res.data.code === 200) {
+                        return res.data.data;  // 你关心的是否存在的标志什么的
+                    } else {
+                        throw new Error(res.data.message || '检查文件失败');
+                    }
                 } catch (error) {
                     console.error('检查文件失败：', error);
                     throw error;
@@ -534,6 +551,10 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
+                if (this.videoPreviewUrl) {
+                    URL.revokeObjectURL(this.videoPreviewUrl);
+                }
+
                 // 验证文件类型
                 const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
                 if (!validTypes.includes(file.type)) {
@@ -550,7 +571,7 @@
                 this.videoFile = file;
                 this.videoPreviewUrl = URL.createObjectURL(file);
                 this.videoUploadStatus = null;
-                await this.uploadVideo();
+                await this.uploadVideo(file);
             },
 
             // 处理封面图选择
@@ -600,22 +621,22 @@
             },
 
             // 上传视频文件
-            async uploadVideo() {
+            async uploadVideo(file) {
                 if (!this.videoFile) return;
-                let file = this.videoFile;
                 this.uploadingVideo = true;
                 this.videoUploadProgress = 0;
                 this.videoUploadStatus = null;
                 try {
-
                     const chunks = await this.cutFile(file);
                     const fileHash = await this.computeFileHash(chunks);
                     let {result: {isFastUpload, fileUrl, nextPartIndex, uploadId}} = await this.checkFileExist(fileHash, file.size);
                     if (isFastUpload) {
-                        this.$message.success(`文件已存在，秒传成功！文件路径`);
-                        this.videoPreviewUrl = fileUrl;
+                        this.$message.success(`文件已存在，秒传成功！文件路径:${fileUrl}`);
+                        this.videoUploadStatus = 'success';
+                        this.form.videoUrl = fileUrl;
                         return;
                     }
+
                     if (!uploadId) {
                         const {result} = await this._getUploadId(file, fileHash, chunks.length);
                         uploadId = result || '';
@@ -626,12 +647,16 @@
                         this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
                     }
 
-                    const {result} = await this.mergeFile(uploadId, file.name);
-                    console.log(result)
+                    const {url} = await this.mergeFile(uploadId, file.name);
+                    this.$message.success(`文件上传成功！文件路径:${url}`);
+                    this.videoUploadStatus = 'success';
+                    this.form.videoUrl = url;
+                    this.uploadingVideo = false;
 
                 } catch (error) {
                     console.log(error)
-                    this.$message.error('上传过程出错:' + error)
+                    this.$message.error('上传过程出错:' + error);
+                    this.videoUploadStatus = 'exception';
                 }
             },
 
