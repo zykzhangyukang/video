@@ -218,6 +218,12 @@ public class OssUploadService extends UploadService {
                 file.setUpdatedAt(new Date());
                 this.sysFileService.save(file);
             }
+
+            // 7. 清理无用分片文件
+            int delete = this.uploadPartMapper.delete(Wrappers.<UploadPart>lambdaQuery()
+                    .eq(UploadPart::getUploadId, uploadId));
+            log.info("清理分片记录:{}",delete);
+
             return file.getFileUrl();
 
         } catch (Exception e) {

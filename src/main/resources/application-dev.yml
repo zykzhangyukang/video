@@ -14,9 +14,9 @@ logging:
     com.coderman.video.mapper: debug
 upload:
   strategy: oss
+  expire-minutes: 60
   local:
     base-upload-path: F:\\files
-    expire-minutes: 60
     domain: http://localhost:8787
   oss:
     domain: https://image.coderman.club

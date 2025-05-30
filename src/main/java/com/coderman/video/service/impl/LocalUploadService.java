@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -250,6 +251,34 @@ public class LocalUploadService extends UploadService {
             throw new IOException("上传文件失败:" + e.getMessage());
         }
 
+    }
+
+    @Override
+    protected void doClean(UploadTask task) {
+        String baseUploadPath = uploadConfig.getLocal().getBaseUploadPath();
+        String uploadId = task.getUploadId();
+        File tmpDir = Paths.get(baseUploadPath, "tmp", uploadId).toFile();
+        if (tmpDir.exists()) {
+            boolean success = deleteDirectory(tmpDir);
+            if (success) {
+                log.info("删除临时目录成功: {}", tmpDir.getAbsolutePath());
+            } else {
+                log.warn("删除临时目录失败: {}", tmpDir.getAbsolutePath());
+            }
+        }
+    }
+
+    private boolean deleteDirectory(File dir) {
+        if (!dir.exists()) return false;
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!file.delete()) {
+                    log.warn("删除文件失败: {}", file.getAbsolutePath());
+                }
+            }
+        }
+        return dir.delete();
     }
 
 
