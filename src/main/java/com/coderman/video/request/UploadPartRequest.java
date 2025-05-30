@@ -14,7 +14,7 @@ public class UploadPartRequest {
     @ApiModelProperty(value = "任务id")
     private String uploadId;
 
-    @ApiModelProperty(value = "分片索引")
+    @ApiModelProperty(value = "分片索引 (从0开始)")
     private Integer partIndex;
 
     @ApiModelProperty(value = "文件")

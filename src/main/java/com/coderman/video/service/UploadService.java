@@ -39,7 +39,7 @@ public abstract class UploadService {
 
         // 查找已经上传完成的文件（状态 = 3）
         SysFile sysFile = this.sysFileService.selectByHash(fileHash);
-        UploadCheckVO resp = new UploadCheckVO(false, "", "", 0);
+        UploadCheckVO resp = new UploadCheckVO(false, "", "", 1);
         if (sysFile != null) {
             resp.setIsFastUpload(true);
             resp.setFileUrl(sysFile.getFileUrl());

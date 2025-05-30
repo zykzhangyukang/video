@@ -130,9 +130,9 @@
             }
 
             // 上传每一块（支持断点续传）
-            for (let i = nextPartIndex; i < chunks.length; i++) {
+            for (let i = nextPartIndex; i <= chunks.length; i++) {
                 console.log(`开始上传分片 ${i}...`);
-                await uploadPart(uploadId, i, chunks[i], file, fileHash);
+                await uploadPart(uploadId, i, chunks[i-1], file, fileHash);
                 console.log(`分片 ${i} 上传完成`);
 
                 const percent = Math.floor(((i + 1) / chunks.length) * 100);

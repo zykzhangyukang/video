@@ -647,8 +647,8 @@
                         uploadId = result || '';
                     }
 
-                    for (let i = nextPartIndex; i < chunks.length; i++) {
-                        await this.uploadPart(uploadId, i, chunks[i], file, fileHash);
+                    for (let i = nextPartIndex; i <= chunks.length; i++) {
+                        await this.uploadPart(uploadId, i, chunks[i-1], file, fileHash);
                         this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
                     }
 
