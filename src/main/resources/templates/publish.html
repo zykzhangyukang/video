@@ -7,6 +7,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title layout:fragment="title">发布视频</title>
+    <script th:src="@{/libs/spark-md5.min.js}"></script>
 </head>
 
 <style layout:fragment="style">
@@ -385,7 +386,7 @@
 
 <script layout:fragment="script" th:inline="javascript">
     let categories = [[${categories}]];
-
+    const CHUNK_SIZE = 1024 * 1024;
     new Vue({
         el: '#publish-wrapper',
         data() {
@@ -435,9 +436,41 @@
             triggerCoverInput() {
                 this.$refs.coverInput.click();
             },
-
+            // 文件分片
+            async cutFile(file) {
+                return new Promise(resolve => {
+                    const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
+                    const threadChunkCount = Math.ceil(chunkCount / (navigator.hardwareConcurrency || 4));
+                    const result = [];
+                    let finishCount = 0;
+                    for (let i = 0; i < (navigator.hardwareConcurrency || 4); i++) {
+                        const worker = new Worker('/libs/worker.js');
+                        const start = i * threadChunkCount;
+                        let end = (i + 1) * threadChunkCount;
+                        if (end > chunkCount) {
+                            end = chunkCount;
+                        }
+                        worker.postMessage({
+                            file,
+                            CHUNK_SIZE,
+                            startChunkIndex: start,
+                            endChunkIndex: end
+                        });
+                        worker.onmessage = e => {
+                            for (let j = start; j < end; j++) {
+                                result[j] = e.data[j - start];
+                            }
+                            worker.terminate();
+                            finishCount++;
+                            if (finishCount === (navigator.hardwareConcurrency || 4)) {
+                                resolve(result);
+                            }
+                        };
+                    }
+                });
+            },
             // 处理视频文件选择
-            handleVideoChange(e) {
+            async handleVideoChange(e) {
                 const file = e.target.files[0];
                 if (!file) return;
 
@@ -453,6 +486,8 @@
                     this.$message.error('视频文件大小不能超过2GB');
                     return;
                 }
+
+                const chunks = await this.cutFile(file);
 
                 this.videoFile = file;
                 this.videoPreviewUrl = URL.createObjectURL(file);

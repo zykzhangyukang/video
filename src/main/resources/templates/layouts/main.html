@@ -8,12 +8,11 @@
     <meta charset="UTF-8">
     <title layout:title-pattern="$CONTENT_TITLE - 慕课Lite">慕课Lite</title>
     <link rel="stylesheet" th:href="@{/libs/element-ui.min.css}" />
-    <link rel="icon" th:href="@{/favicon.ico(v=1)}" type="image/x-icon">
-    <link rel="shortcut icon" th:href="@{/favicon.ico(v=1)}">
+    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon">
+    <link rel="shortcut icon" th:href="@{/favicon.ico}">
     <script th:src="@{/libs/vue.js}"></script>
     <script th:src="@{/libs/element-ui.min.js}"></script>
     <script th:src="@{/libs/axios.min.js}"></script>
-    <style layout:fragment="style"></style>
     <style>
         :root {
             --primary-color: #409EFF;
@@ -203,6 +202,7 @@
             }
         }
     </style>
+    <style layout:fragment="style"></style>
 </head>
 
 <body>
