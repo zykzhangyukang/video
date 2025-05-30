@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coderman.video.mapper.UploadPartMapper">
+  <resultMap id="BaseResultMap" type="com.coderman.video.model.UploadPart">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="upload_id" jdbcType="VARCHAR" property="uploadId" />
+    <result column="part_number" jdbcType="INTEGER" property="partNumber" />
+    <result column="tag" jdbcType="VARCHAR" property="tag" />
+    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, upload_id, part_number, tag, created_at
+  </sql>
+</mapper>

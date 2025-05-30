@@ -457,7 +457,7 @@
             async uploadPart(uploadId, index, chunk, file, fileHash) {
                 const formData = new FormData();
                 formData.append("uploadId", uploadId);
-                formData.append("partIndex", index);
+                formData.append("partNumber", index);
                 formData.append("file", chunk.blob);
                 formData.append("fileName", file.name);
                 formData.append("fileHash", fileHash);
@@ -633,7 +633,7 @@
                 try {
                     const chunks = await this.cutFile(file);
                     const fileHash = await this.computeFileHash(chunks);
-                    let {result: {isFastUpload, fileUrl, nextPartIndex, uploadId}} = await this.checkFileExist(fileHash, file.size);
+                    let {result: {isFastUpload, fileUrl, nextPartNumber, uploadId}} = await this.checkFileExist(fileHash, file.size);
                     if (isFastUpload) {
                         this.$message.success(`文件已存在，秒传成功！文件路径:${fileUrl}`);
                         this.videoUploadStatus = 'success';
@@ -647,7 +647,7 @@
                         uploadId = result || '';
                     }
 
-                    for (let i = nextPartIndex; i <= chunks.length; i++) {
+                    for (let i = nextPartNumber; i <= chunks.length; i++) {
                         await this.uploadPart(uploadId, i, chunks[i-1], file, fileHash);
                         this.videoUploadProgress = Math.floor(((i + 1) / chunks.length) * 100);
                     }

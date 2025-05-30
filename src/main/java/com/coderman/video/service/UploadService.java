@@ -61,7 +61,7 @@ public abstract class UploadService {
         if (unfinishedTask != null) {
             resp.setIsFastUpload(false);
             resp.setUploadId(unfinishedTask.getUploadId());
-            resp.setNextPartIndex(unfinishedTask.getPartIndex() + 1);
+            resp.setNextPartNumber(unfinishedTask.getPartNumber() + 1);
             return resp;
         }
 

@@ -10,7 +10,9 @@ import com.aliyun.oss.model.UploadPartResult;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.coderman.video.config.UploadConfig;
 import com.coderman.video.enums.UploadStatusEnum;
+import com.coderman.video.mapper.UploadPartMapper;
 import com.coderman.video.mapper.UploadTaskMapper;
+import com.coderman.video.model.UploadPart;
 import com.coderman.video.model.UploadTask;
 import com.coderman.video.request.UploadInitRequest;
 import com.coderman.video.request.UploadMergeRequest;
@@ -22,12 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.Date;
 
 @Slf4j
 @Component("ossUploadStrategy")
@@ -36,11 +40,12 @@ public class OssUploadService extends UploadService {
 
     @Value(value = "${spring.application.name:}")
     private String applicationName;
-
     @Resource
     private UploadConfig uploadConfig;
     @Resource
     private UploadTaskMapper uploadTaskMapper;
+    @Resource
+    private UploadPartMapper uploadPartMapper;
 
     private OSSClient ossClient;
 
@@ -94,7 +99,7 @@ public class OssUploadService extends UploadService {
         newTask.setFilePath(objectName);
         newTask.setFileSize(fileSize);
         newTask.setTotalParts(totalParts);
-        newTask.setPartIndex(0);
+        newTask.setPartNumber(0);
         newTask.setStatus(0);
         newTask.setUserId(SecurityUtils.getUserId());
         this.uploadTaskMapper.insert(newTask);
@@ -102,13 +107,14 @@ public class OssUploadService extends UploadService {
     }
 
     @Override
+    @Transactional(timeout = 30)
     public void uploadPart(UploadPartRequest request) throws IOException {
 
         MultipartFile file = request.getFile();
         String fileHash = request.getFileHash();
         String uploadId = request.getUploadId();
         String fileName = request.getFileName();
-        Integer partIndex = request.getPartIndex();
+        Integer partNumber = request.getPartNumber();
         String bucketName = uploadConfig.getOss().getBucketName();
 
         // 1. 参数校验
@@ -116,7 +122,7 @@ public class OssUploadService extends UploadService {
         Assert.hasText(fileHash, "文件Hash不能为空");
         Assert.hasText(uploadId, "上传任务ID不能为空");
         Assert.hasText(fileName, "文件名不能为空");
-        Assert.notNull(partIndex, "分片索引不能为空");
+        Assert.notNull(partNumber, "分片索引不能为空");
 
         UploadTask uploadTask = this.uploadTaskMapper.selectOne(Wrappers.<UploadTask>lambdaQuery()
                 .eq(UploadTask::getUploadId, uploadId)
@@ -131,18 +137,23 @@ public class OssUploadService extends UploadService {
         req.setUploadId(uploadId);
         req.setInputStream(file.getInputStream());
         req.setPartSize(file.getSize());
-        req.setPartNumber(partIndex + 1);
+        req.setPartNumber(partNumber);
         UploadPartResult uploadPartResult = ossClient.uploadPart(req);
 
         // 4. 更新数据
-        int rowCount = this.uploadTaskMapper.update(null, Wrappers.<UploadTask>lambdaUpdate()
+        this.uploadTaskMapper.update(null, Wrappers.<UploadTask>lambdaUpdate()
                 .setSql("status = " + UploadStatusEnum.UPLOADING.getCode())
-                .setSql("part_index = part_index + 1")
+                .setSql("part_number = part_number + 1")
                 .eq(UploadTask::getUploadId, uploadId)
         );
-        if (rowCount > 0) {
-            log.info("保存分片成功: uploadId={}, partIndex={}, eTag={}", uploadId, partIndex, uploadPartResult.getETag());
-        }
+
+        UploadPart entity = new UploadPart();
+        entity.setPartNumber(partNumber);
+        entity.setTag(uploadPartResult.getETag());
+        entity.setCreatedAt(new Date());
+        entity.setUploadId(uploadTask.getUploadId());
+        this.uploadPartMapper.insert(entity);
+        log.info("保存分片成功: uploadId={}, partNumber={}, eTag={}", uploadId, partNumber, uploadPartResult.getETag());
     }
 
     @Override

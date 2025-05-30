@@ -15,7 +15,7 @@ public class UploadPartRequest {
     private String uploadId;
 
     @ApiModelProperty(value = "分片索引 (从0开始)")
-    private Integer partIndex;
+    private Integer partNumber;
 
     @ApiModelProperty(value = "文件")
     private MultipartFile file;

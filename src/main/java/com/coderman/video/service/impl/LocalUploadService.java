@@ -74,7 +74,7 @@ public class LocalUploadService extends UploadService {
         newTask.setFilePath(FileUtils.genFilePath(fileName, FileUtils.FileModuleEnum.COMMON_MODULE));
         newTask.setFileSize(fileSize);
         newTask.setTotalParts(totalParts);
-        newTask.setPartIndex(0);
+        newTask.setPartNumber(0);
         newTask.setStatus(0);
         newTask.setUserId(SecurityUtils.getUserId());
         this.uploadTaskMapper.insert(newTask);
@@ -88,7 +88,7 @@ public class LocalUploadService extends UploadService {
         String fileHash = uploadPartRequest.getFileHash();
         String uploadId = uploadPartRequest.getUploadId();
         String fileName = uploadPartRequest.getFileName();
-        Integer partIndex = uploadPartRequest.getPartIndex();
+        Integer partNumber = uploadPartRequest.getPartNumber();
         String baseUploadPath = uploadConfig.getLocal().getBaseUploadPath();
 
         // 1. 参数校验
@@ -96,7 +96,7 @@ public class LocalUploadService extends UploadService {
         Assert.hasText(fileHash, "文件Hash不能为空");
         Assert.hasText(uploadId, "上传任务ID不能为空");
         Assert.hasText(fileName, "文件名不能为空");
-        Assert.notNull(partIndex, "分片索引不能为空");
+        Assert.notNull(partNumber, "分片索引不能为空");
 
         // 2. 构建保存路径
         String baseDir = Paths.get(baseUploadPath, "tmp", uploadId).toString();
@@ -105,9 +105,9 @@ public class LocalUploadService extends UploadService {
             throw new IOException("创建上传目录失败：" + baseDir);
         }
 
-        File partFile = new File(dir, partIndex + ".part");
+        File partFile = new File(dir, partNumber + ".part");
         if (partFile.exists()) {
-            log.warn("分片文件已存在，uploadId={}, partIndex={}", uploadId, partIndex);
+            log.warn("分片文件已存在，uploadId={}, partNumber={}", uploadId, partNumber);
             return;
         }
 
@@ -117,11 +117,11 @@ public class LocalUploadService extends UploadService {
         // 4. 更新数据
         int rowCount = this.uploadTaskMapper.update(null, Wrappers.<UploadTask>lambdaUpdate()
                 .setSql("status = " + UploadStatusEnum.UPLOADING.getCode())
-                .setSql("part_index = part_index + 1")
+                .setSql("part_number = part_number + 1")
                 .eq(UploadTask::getUploadId, uploadId)
         );
         if (rowCount > 0) {
-            log.info("保存分片成功: uploadId={}, partIndex={}, path={}", uploadId, partIndex, partFile.getAbsolutePath());
+            log.info("保存分片成功: uploadId={}, partNumber={}, path={}", uploadId, partNumber, partFile.getAbsolutePath());
         }
     }
 
@@ -149,7 +149,7 @@ public class LocalUploadService extends UploadService {
             }
 
             // 3. 检查是否所有分片已上传完成
-            if (uploadTask.getPartIndex() < uploadTask.getTotalParts()) {
+            if (uploadTask.getPartNumber() < uploadTask.getTotalParts()) {
                 throw new IllegalStateException("还有分片未上传完成，无法合并");
             }
 

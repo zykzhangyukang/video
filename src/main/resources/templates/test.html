@@ -92,7 +92,7 @@
     async function uploadPart(uploadId, index, chunk, file, fileHash) {
         const formData = new FormData();
         formData.append("uploadId", uploadId);
-        formData.append("partIndex", index);
+        formData.append("partNumber", index);
         formData.append("file", chunk.blob);
         formData.append("fileName", file.name);
         formData.append("fileHash", fileHash);
@@ -118,7 +118,7 @@
             const fileHash = await computeFileHash(chunks);
 
             // 2. 检查文件是否已存在（秒传）
-            let {result: {isFastUpload , filePath, nextPartIndex, uploadId} } = await checkFileExist(fileHash, file.size);
+            let {result: {isFastUpload , filePath, nextPartNumber, uploadId} } = await checkFileExist(fileHash, file.size);
             if (isFastUpload) {
                 console.log(`文件已存在，秒传成功！文件路径：${filePath}`);
                 return;
@@ -130,7 +130,7 @@
             }
 
             // 上传每一块（支持断点续传）
-            for (let i = nextPartIndex; i <= chunks.length; i++) {
+            for (let i = nextPartNumber; i <= chunks.length; i++) {
                 console.log(`开始上传分片 ${i}...`);
                 await uploadPart(uploadId, i, chunks[i-1], file, fileHash);
                 console.log(`分片 ${i} 上传完成`);

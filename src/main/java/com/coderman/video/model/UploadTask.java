@@ -41,7 +41,7 @@ public class UploadTask implements Serializable {
     private Integer totalParts;
 
     @ApiModelProperty(value = "当前正在上传的分片编号")
-    private Integer partIndex;
+    private Integer partNumber;
 
     @ApiModelProperty(value = "上传状态：0-初始化，1-上传中，2-已上传，3-已合并，4-取消，5-失败")
     private Integer status;
