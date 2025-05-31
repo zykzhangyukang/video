@@ -16,7 +16,7 @@ upload:
   strategy: local
   expire-minutes: 60
   local:
-    base-upload-path: F:\\files
+    base-upload-path: G:\\files
     domain: http://localhost:8787
   oss:
     domain: https://image.coderman.club
