@@ -13,7 +13,7 @@ logging:
     root: info
     com.coderman.video.mapper: debug
 upload:
-  strategy: oss
+  strategy: local
   expire-minutes: 60
   local:
     base-upload-path: F:\\files

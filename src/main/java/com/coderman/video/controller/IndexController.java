@@ -31,7 +31,7 @@ public class IndexController {
     @ApiOperation(value = "测试路由", notes = "测试路由")
     @GetMapping(value = {"/test"})
     public String testPage() {
-        return "test";
+        return "test/test";
     }
 
 

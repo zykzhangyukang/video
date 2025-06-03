@@ -3,8 +3,10 @@ package com.coderman.video.service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.coderman.video.config.UploadConfig;
 import com.coderman.video.enums.UploadStatusEnum;
+import com.coderman.video.mapper.UploadPartMapper;
 import com.coderman.video.mapper.UploadTaskMapper;
 import com.coderman.video.model.SysFile;
+import com.coderman.video.model.UploadPart;
 import com.coderman.video.model.UploadTask;
 import com.coderman.video.request.UploadCheckRequest;
 import com.coderman.video.request.UploadInitRequest;
@@ -28,6 +30,8 @@ public abstract class UploadService {
     private SysFileService sysFileService;
     @Resource
     private UploadTaskMapper uploadTaskMapper;
+    @Resource
+    private UploadPartMapper uploadPartMapper;
     @Resource
     private UploadConfig uploadConfig;
 
@@ -146,6 +150,12 @@ public abstract class UploadService {
 
             // 执行清理操作（具体实现由子类定义）
             this.doClean(task);
+
+            // 分片数据删除
+            this.uploadPartMapper
+                    .delete(Wrappers.<UploadPart>lambdaQuery()
+                    .eq(UploadPart::getUploadId, task.getUploadId())
+                    .last("limit " + task.getTotalParts()));
 
             // 更新任务状态为 FAILED，标识上传失败
             UploadTask update = new UploadTask();

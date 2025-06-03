@@ -8,10 +8,7 @@ import com.coderman.video.vo.ResultVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -31,6 +28,12 @@ public class VideoController {
         List<CategoryVO> videoCategories = this.categoryService.selectAllCategory();
         model.addAttribute("categories", videoCategories);
         return "publish";
+    }
+
+    @ApiOperation(value = "视频详情页面", notes = "视频详情页面")
+    @GetMapping(value = {"/detail/{id}"})
+    public String videoDetailPage(@PathVariable(value = "id") Integer id,  Model model) {
+        return "detail";
     }
 
     @PostMapping(value = "/api/videos")
