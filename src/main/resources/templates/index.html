@@ -115,7 +115,7 @@
         width: 100%;
         position: relative;
         margin: 0 auto;
-        box-shadow: var(--shadow-sm);
+        /*box-shadow: var(--shadow-sm);*/
     }
 
     /* 视频卡片优化 */
@@ -419,7 +419,6 @@
     <div :class="['search-wrapper', { expanded: showSearch }]">
         <div class="search-container">
             <el-input
-                    size="small"
                     placeholder="搜索视频关键词"
                     v-model="searchKeyword"
                     clearable
@@ -503,6 +502,7 @@
                 @current-change="handlePageChange"
                 :current-page="currentPage"
                 :page-size="pageSize"
+                :background="true"
                 layout="prev, pager, next"
                 :total="totalVideos">
         </el-pagination>

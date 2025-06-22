@@ -139,9 +139,7 @@ public abstract class UploadService {
         // 查询超时未完成的上传任务（INIT / UPLOADING 且创建时间早于 expireTime）
         List<UploadTask> expiredTasks = uploadTaskMapper.selectList(
                 Wrappers.<UploadTask>lambdaQuery()
-                        .in(UploadTask::getStatus,
-                                UploadStatusEnum.INIT.getCode(),
-                                UploadStatusEnum.UPLOADING.getCode())
+                        .in(UploadTask::getStatus, UploadStatusEnum.INIT.getCode(), UploadStatusEnum.UPLOADING.getCode())
                         .lt(UploadTask::getCreatedAt, expireTime)
         );
 
