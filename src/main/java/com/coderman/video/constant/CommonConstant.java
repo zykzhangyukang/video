@@ -10,5 +10,5 @@ public interface CommonConstant {
     /**
      * 视频列表分页大小
      */
-    public static final Integer VIDEO_PAGE_SIZE = 30;
+    public static final Integer VIDEO_PAGE_SIZE = 32;
 }

@@ -64,9 +64,7 @@ public abstract class UploadService {
                         .eq(UploadTask::getFileHash, fileHash)
                         .eq(UploadTask::getFileSize, fileSize)
                         .eq(UploadTask::getUserId, SecurityUtils.getUserId())
-                        .in(UploadTask::getStatus,
-                                UploadStatusEnum.INIT.getCode(),
-                                UploadStatusEnum.UPLOADING.getCode())
+                        .in(UploadTask::getStatus, UploadStatusEnum.INIT.getCode(), UploadStatusEnum.UPLOADING.getCode())
                         .orderByDesc(UploadTask::getId)
                         .last("limit 1")
         );

@@ -1,5 +1,6 @@
 package com.coderman.video.utils;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ public class FileUtils {
 
     public static final String dir = "uploads";
 
+    @Getter
     public enum FileModuleEnum {
         COMMON_MODULE("common"),
         USER_MODULE("user"),
@@ -32,7 +34,6 @@ public class FileUtils {
         private final String code;
 
         FileModuleEnum(String code) { this.code = code; }
-        public String getCode() { return code; }
     }
 
     public static String getFileType(String fileName) {
